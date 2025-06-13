@@ -87,7 +87,7 @@ with col2:
     st.header("Info")
     st.write("Carica file CSV estratto da Autocad senza elaborazioni (grezzo), dopo elaborazione puoi scaricare Excel.")
     
-    st.markdown("---")    
+st.markdown("---")    
     st.subheader("Dati originali")
     st.dataframe(df)
 
