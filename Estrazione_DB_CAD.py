@@ -82,7 +82,7 @@ if uploaded_file is not None:
     output.seek(0)
 
     with col1:
-        subcol1, subcol2 = st.columns([4,1])  # Nested columns
+        subcol1, subcol2 = st.columns([3,1])  # Nested columns
         with subcol2:
             st.download_button(
                 label="Scarica Excel elaborato",
