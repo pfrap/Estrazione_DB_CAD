@@ -86,8 +86,8 @@ with col2:
         file_name="Estrazione_DB_CAD.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
     
-st.subheader("Anteprima dati originali")
+st.subheader("Dati originali")
 st.dataframe(df)
 
-st.subheader("Anteprima dati elaborati")
+st.subheader("Dati elaborati")
 st.dataframe(prod_df)
