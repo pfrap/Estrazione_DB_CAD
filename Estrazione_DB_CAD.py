@@ -91,7 +91,7 @@ if uploaded_file is not None:
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")    
     with col2:
         st.header("Riassunto componenti progetto")
-        grouped_df=df.groupby(["GRUPPO"], dropna=False)["Q.TA"].sum().reset_index()
+        grouped_df=prod_df.groupby(["GRUPPO"], dropna=False)["Q.TA"].sum().reset_index()
         st.dataframe(grouped_df)
     
     st.markdown("---")
