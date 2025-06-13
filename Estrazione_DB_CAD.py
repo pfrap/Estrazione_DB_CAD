@@ -112,5 +112,7 @@ if uploaded_file is not None:
         values="Q.TA",
         index=["FLR", "N.PROSPETTO", "OFX", "GRUPPO", "TIP.COM", "A.N.", "HND"],
         aggfunc="sum")
-    
+    pivot_ofx_doors = pivot_ofx_doors.reset_index()  # Fondamentale per Streamlit
+    pivot_ofx_doors = pivot_ofx_doors.astype(str).replace("nan", "")  # Rende tutto stringa, evita errori
+
     st.dataframe(pivot_ofx_doors)
