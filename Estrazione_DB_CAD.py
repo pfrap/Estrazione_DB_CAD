@@ -124,8 +124,8 @@ if uploaded_file is not None:
         st.subheader("Pivot per verifica assi N e quantità pezzi")
         grouped_ofx_an = prod_df[prod_df["GRUPPO"].isin(["P", "VP"])]
         grouped_ofx_an = pd.pivot_table(
-          filtered_df,
-          values="Q.TA",
-          index=["FLR", "N.PROSPETTO", "OFX", "GRUPPO", "A.N."],
-          aggfunc="sum")
-        grouped_ofx_an
+            filtered_df,
+            values="Q.TA",
+            index=["FLR", "N.PROSPETTO", "OFX", "GRUPPO", "A.N."],
+            aggfunc="sum")
+        st.dataframe(grouped_ofx_an)
