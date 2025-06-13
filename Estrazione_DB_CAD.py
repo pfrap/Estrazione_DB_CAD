@@ -11,6 +11,14 @@ with col1:
     st.header("Carica il file")
     uploaded_file = st.file_uploader("Carica il file CSV esportato da Autocad", type=["csv"])
 
+    if 'output' in locals():
+        st.download_button(
+            label="Scarica file Excel",
+            data=output,
+            file_name="Estrazione_DB_CAD.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+
 with col2:
     st.header("Info")
     st.write("Qui puoi inserire info utili o istruzioni")
@@ -84,10 +92,3 @@ if uploaded_file is not None:
     output = io.BytesIO()
     prod_df.to_excel(output, index=False)
     output.seek(0)
-
-    st.download_button(
-        label="📥 Scarica file Excel",
-        data=output,
-        file_name="Estrazione_DB_CAD.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
