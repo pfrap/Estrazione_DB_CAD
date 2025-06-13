@@ -18,11 +18,10 @@ with col2:
     st.write("Qui puoi inserire info utili o istruzioni")
     
     st.download_button(
-        label="📥 Scarica file Excel",
+        label="Scarica file Excel",
         data=output,
         file_name="Estrazione_DB_CAD.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
     
 if uploaded_file is not None:
     df = pd.read_csv(uploaded_file)
