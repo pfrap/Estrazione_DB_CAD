@@ -85,8 +85,8 @@ if uploaded_file is not None:
         file_name="Estrazione_DB_CAD.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")    
     
-st.subheader("Dati originali")
-st.dataframe(df)
+    st.subheader("Dati originali")
+    st.dataframe(df)
 
-st.subheader("Dati elaborati")
-st.dataframe(prod_df)
+    st.subheader("Dati elaborati")
+    st.dataframe(prod_df)
