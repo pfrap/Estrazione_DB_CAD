@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import io
+from st_aggrid import AgGrid
 
 st.set_page_config(layout="wide")
 st.title("Estrazione DB CAD da CSV Autocad")
@@ -142,5 +143,4 @@ if uploaded_file is not None:
             aggfunc="sum")
         
         st.dataframe(grouped_ofx_mani)
-        from st_aggrid import AgGrid
         AgGrid(grouped_ofx_mani)
