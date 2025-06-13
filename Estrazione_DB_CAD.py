@@ -82,14 +82,12 @@ if uploaded_file is not None:
         file_name="Estrazione_DB_CAD.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")    
 
-    
 with col2:
     st.header("Info")
     st.write("Carica file CSV estratto da Autocad senza elaborazioni (grezzo), dopo elaborazione puoi scaricare Excel.")
     
-st.markdown("---")    
-    st.subheader("Dati originali")
-    st.dataframe(df)
+        st.subheader("Dati originali")
+        st.dataframe(df)
 
-    st.subheader("Dati elaborati")
-    st.dataframe(prod_df)
+        st.subheader("Dati elaborati")
+        st.dataframe(prod_df)
