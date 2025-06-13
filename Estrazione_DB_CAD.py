@@ -9,13 +9,11 @@ col1, col2 = st.columns(2)
 
 with col1:
     st.header("Carica il file")
-    uploaded_file = st.file_uploader("Seleziona CSV")
+    uploaded_file = st.file_uploader("Carica il file CSV esportato da Autocad", type=["csv"])
 
 with col2:
     st.header("Info")
     st.write("Qui puoi inserire info utili o istruzioni")
-
-uploaded_file = st.file_uploader("Carica il file CSV esportato da Autocad", type=["csv"])
 
 if uploaded_file is not None:
     df = pd.read_csv(uploaded_file)
