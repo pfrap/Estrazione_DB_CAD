@@ -75,16 +75,21 @@ if uploaded_file is not None:
     output = io.BytesIO()
     prod_df.to_excel(output, index=False)
     output.seek(0)
+       
+    st.markdown("<div style='text-align: right;'>", unsafe_allow_html=True)
+    st.download_button(
+        label="Scarica Excel elaborato",
+        data=output,
+        file_name="Estrazione_DB_CAD.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")    
+    st.markdown("</div>", unsafe_allow_html=True)
+
     
 with col2:
     st.header("Info")
     st.write("Carica file CSV estratto da Autocad senza elaborazioni (grezzo), dopo elaborazione puoi scaricare Excel.")
     
-    st.download_button(
-        label="Scarica Excel elaborato",
-        data=output,
-        file_name="Estrazione_DB_CAD.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
     
 st.subheader("Dati originali")
 st.dataframe(df)
