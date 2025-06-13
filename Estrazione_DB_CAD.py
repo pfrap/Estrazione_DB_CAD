@@ -131,13 +131,14 @@ if uploaded_file is not None:
         grouped_ofx_an = pivot_ofx_doors.reset_index()  # Fondamentale per Streamlit
         grouped_ofx_an = pivot_ofx_doors.astype(str).replace("nan", "")  # Rende tutto stringa, evita errori
         st.dataframe(grouped_ofx_an)
+        
     with col5:
         st.subheader("Pivot per verifica tipi e mani")
         grouped_ofx_mani_filtered = prod_df[prod_df["GRUPPO"].isin(["P", "HAP", "VP"])]
         grouped_ofx_mani = pd.pivot_table(
             grouped_ofx_mani_filtered,
             values="Q.TA",
-            index=["FLR", "N.PROSPETTO", "OFX", "GRUPPO","TIP.COM", "HND"],
+            index=["FLR", "N.PROSPETTO", "OFX", "GRUPPO","TIP.COM","HND"],
             aggfunc="sum")
         grouped_ofx_mani = pivot_ofx_doors.reset_index()  # Fondamentale per Streamlit
         grouped_ofx_mani = pivot_ofx_doors.astype(str).replace("nan", "")  # Rende tutto stringa, evita errori
