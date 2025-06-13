@@ -14,7 +14,8 @@ with col1:
 with col2:
     st.header("Info")
     st.write("Carica file CSV estratto da Autocad senza elaborazioni (grezzo), dopo elaborazione puoi scaricare Excel.")
-    
+
+### FUNZIONE    
 if uploaded_file is not None:
     df = pd.read_csv(uploaded_file)
 
@@ -64,26 +65,28 @@ if uploaded_file is not None:
     desired_columns = ['GRUPPO', 'TIP.COM', 'HND', 'A.N.', 'HGT', 'L.TOT.', 'L.1', 'L.2', 'L.3',
                        'N01', 'TIPO', 'FINITURA', 'POSIZIONE VETRO ', 'N.PROSPETTO', 'OFX',
                        'FLR', 'N.CARTIGLIO', 'Q.TA']
-
+    
     for col in desired_columns:
         if col not in df.columns:
             df[col] = "."
-
     prod_df = df.loc[:, desired_columns]
 
     # Ordina righe
     prod_df.sort_values(by=["GRUPPO", "TIP.COM", "A.N.", "HGT", "L.TOT.", "L.1"], inplace=True)
 
+### FINE FUNZIONE
+    
     # Esporta in Excel in memoria
     output = io.BytesIO()
     prod_df.to_excel(output, index=False)
     output.seek(0)
-       
-    st.download_button(
-        label="Scarica Excel elaborato",
-        data=output,
-        file_name="Estrazione_DB_CAD.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")    
+
+    with col2:
+        st.download_button(
+            label="Scarica Excel elaborato",
+            data=output,
+            file_name="Estrazione_DB_CAD.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")    
     
     st.markdown("---")
     st.subheader("Dati originali")
