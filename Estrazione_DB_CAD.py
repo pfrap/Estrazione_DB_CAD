@@ -142,5 +142,5 @@ if uploaded_file is not None:
             aggfunc="sum")
         
         st.dataframe(grouped_ofx_mani)
-        from st_aggrid import AgGrid
-        AgGrid(grouped_ofx_mani)
+from st_aggrid import AgGrid
+AgGrid(grouped_ofx_mani)
