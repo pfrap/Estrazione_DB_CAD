@@ -100,3 +100,15 @@ if uploaded_file is not None:
 
     st.subheader("Dati elaborati")
     st.dataframe(prod_df)
+
+    prod_df["GRUPPO"] = prod_df["GRUPPO"].astype(str).str.strip()
+    filtered_df = prod_df[prod_df["GRUPPO"].isin(["P", "HAP", "VP"])]
+    
+    st.markdown("---")
+    st.subheader("Pivot per verifica porte")
+    pivot_ofx_doors = pd.pivot_table(
+        filtered_df,
+        values="Q.TA",
+        index=["FLR", "N.PROSPETTO", "OFX", "GRUPPO", "TIP.COM", "A.N.", "HND"],
+        aggfunc="sum")
+    st.dataframe(pivot_ofx_doors)
