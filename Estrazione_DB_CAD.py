@@ -100,9 +100,6 @@ if uploaded_file is not None:
 
     st.subheader("Dati elaborati")
     st.dataframe(prod_df)
-
-    prod_df["GRUPPO"] = prod_df["GRUPPO"].astype(str).str.strip()
-    filtered_df = prod_df[prod_df["GRUPPO"].isin(["P", "HAP", "VP"])]
     
     st.markdown("---")
 
