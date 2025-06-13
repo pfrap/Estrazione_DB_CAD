@@ -4,7 +4,6 @@ import io
 
 st.set_page_config(layout="wide")
 st.title("Estrazione DB CAD da CSV Autocad")
-output = None  # definizione iniziale in alto nel file
 
 # Layout a colonne
 col1, col2 = st.columns(2)
@@ -17,17 +16,8 @@ with col2:
     st.header("Info")
     st.write("Qui puoi inserire info utili o istruzioni")
     
-    st.download_button(
-        label="Scarica file Excel",
-        data=output,
-        file_name="Estrazione_DB_CAD.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-    
 if uploaded_file is not None:
     df = pd.read_csv(uploaded_file)
-
-    st.subheader("Anteprima dati originali")
-    st.dataframe(df.head())
 
     # Rinomina colonne se presenti
     if "Nome" in df.columns:
@@ -85,11 +75,18 @@ if uploaded_file is not None:
     # Ordina righe
     prod_df.sort_values(by=["GRUPPO", "TIP.COM", "A.N.", "HGT", "L.TOT.", "L.1"], inplace=True)
 
-    st.subheader("Anteprima dati elaborati")
-    st.dataframe(prod_df)
-
     # Esporta in Excel in memoria
     output = io.BytesIO()
     prod_df.to_excel(output, index=False)
     output.seek(0)
 
+    st.download_button(
+        label="Scarica file Excel",
+        data=output,
+        file_name="Estrazione_DB_CAD.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    st.subheader("Anteprima dati originali")
+    st.dataframe(df.head())
+
+    st.subheader("Anteprima dati elaborati")
+    st.dataframe(prod_df)
