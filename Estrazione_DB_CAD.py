@@ -93,32 +93,3 @@ st.markdown("---")
 
     st.subheader("Dati elaborati")
     st.dataframe(prod_df)
-
-st.title("Demo layout Streamlit")
-
-with st.container():
-    st.subheader("Sezione dati")
-    st.write("Questa sezione mostra una tabella")
-
-    # Layout: colonna larga + pulsante a destra
-    col1, col2 = st.columns(2)
-
-    with col1:
-        st.dataframe({"Nome": ["Anna", "Luca"], "Età": [28, 32]})
-
-    with col2:
-        st.button("Azione")
-
-# Spazio tra le sezioni
-st.markdown("---")
-
-with st.container():
-    st.subheader("Sezione download")
-    col_left, col_right = st.columns([5, 1])
-
-    with col_left:
-        st.write("Qui ci sono istruzioni o descrizioni")
-
-    with col_right:
-        st.download_button("Scarica file", data=b"Fake", file_name="file.txt")
-
