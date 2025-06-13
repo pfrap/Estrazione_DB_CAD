@@ -85,6 +85,7 @@ if uploaded_file is not None:
         file_name="Estrazione_DB_CAD.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")    
     
+    st.markdown("---")
     st.subheader("Dati originali")
     st.dataframe(df)
 
