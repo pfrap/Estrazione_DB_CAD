@@ -11,6 +11,9 @@ col1, col2 = st.columns(2)
 with col1:
     st.header("Carica il file")
     uploaded_file = st.file_uploader("Carica il file CSV esportato da Autocad", type=["csv"])
+with col2:
+    st.header("Info")
+    st.write("Carica file CSV estratto da Autocad senza elaborazioni (grezzo), dopo elaborazione puoi scaricare Excel.")
     
 if uploaded_file is not None:
     df = pd.read_csv(uploaded_file)
@@ -81,13 +84,9 @@ if uploaded_file is not None:
         data=output,
         file_name="Estrazione_DB_CAD.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")    
-
-with col2:
-    st.header("Info")
-    st.write("Carica file CSV estratto da Autocad senza elaborazioni (grezzo), dopo elaborazione puoi scaricare Excel.")
     
-        st.subheader("Dati originali")
-        st.dataframe(df)
+st.subheader("Dati originali")
+st.dataframe(df)
 
-        st.subheader("Dati elaborati")
-        st.dataframe(prod_df)
+st.subheader("Dati elaborati")
+st.dataframe(prod_df)
