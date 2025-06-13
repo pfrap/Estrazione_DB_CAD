@@ -113,7 +113,7 @@ if uploaded_file is not None:
         pivot_ofx_doors = pd.pivot_table(
             filtered_df,
             values="Q.TA",
-            index=["FLR", "N.PROSPETTO", "OFX", "GRUPPO", "TIP.COM", "A.N.", "HND"],
+            index1=["FLR", "N.PROSPETTO", "OFX", "GRUPPO", "TIP.COM", "A.N.", "HND"],
             aggfunc="sum")
         pivot_ofx_doors = pivot_ofx_doors.reset_index()  # Fondamentale per Streamlit
         pivot_ofx_doors = pivot_ofx_doors.astype(str).replace("nan", "")  # Rende tutto stringa, evita errori
@@ -126,7 +126,7 @@ if uploaded_file is not None:
         grouped_ofx_an = pd.pivot_table(
             grouped_ofx_an_filtered,
             values="Q.TA",
-            index=["FLR", "N.PROSPETTO", "OFX", "GRUPPO", "A.N."],
+            index2=["FLR", "N.PROSPETTO", "OFX", "GRUPPO", "A.N."],
             aggfunc="sum")
         grouped_ofx_an = pivot_ofx_doors.reset_index()  # Fondamentale per Streamlit
         grouped_ofx_an = pivot_ofx_doors.astype(str).replace("nan", "")  # Rende tutto stringa, evita errori
@@ -138,7 +138,7 @@ if uploaded_file is not None:
         grouped_ofx_mani = pd.pivot_table(
             grouped_ofx_mani_filtered,
             values="Q.TA",
-            index=["FLR", "N.PROSPETTO", "OFX", "GRUPPO","TIP.COM","HND"],
+            index3=["FLR", "N.PROSPETTO", "OFX", "GRUPPO","TIP.COM","HND"],
             aggfunc="sum")
         grouped_ofx_mani = pivot_ofx_doors.reset_index()  # Fondamentale per Streamlit
         grouped_ofx_mani = pivot_ofx_doors.astype(str).replace("nan", "")  # Rende tutto stringa, evita errori
