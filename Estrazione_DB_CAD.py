@@ -106,7 +106,7 @@ with st.container():
     st.write("Questa sezione mostra una tabella")
 
     # Layout: colonna larga + pulsante a destra
-    col1, col2 = st.columns([6, 1])
+    col1, col2 = st.columns(2)
 
     with col1:
         st.dataframe({"Nome": ["Anna", "Luca"], "Età": [28, 32]})
