@@ -143,5 +143,3 @@ if uploaded_file is not None:
         grouped_ofx_mani = grouped_ofx_mani.reset_index()  # Fondamentale per Streamlit
         grouped_ofx_mani = grouped_ofx_mani.astype(str).replace("nan", "")  # Rende tutto stringa, evita errori
         st.dataframe(grouped_ofx_mani)
-        styled_df = grouped_ofx_mani.style.background_gradient()
-        st.dataframe(styled_df)
