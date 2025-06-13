@@ -129,7 +129,7 @@ if uploaded_file is not None:
             index=["FLR", "N.PROSPETTO", "OFX", "GRUPPO", "A.N."],
             aggfunc="sum")
         st.dataframe(grouped_ofx_an)
- with col5:
+    with col5:
         st.subheader("Pivot per verifica tipi e mani")
         grouped_ofx_mani_filtered = prod_df[prod_df["GRUPPO"].isin(["P", "HAP", "VP"])]
         grouped_ofx_mani = pd.pivot_table(
