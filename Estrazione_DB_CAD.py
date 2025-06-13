@@ -81,10 +81,11 @@ if uploaded_file is not None:
     output.seek(0)
 
     st.download_button(
-        label="Scarica file Excel",
+        label="Scarica Excel con estrazione elaborata",
         data=output,
         file_name="Estrazione_DB_CAD.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    
     st.subheader("Anteprima dati originali")
     st.dataframe(df.head())
 
