@@ -14,7 +14,7 @@ with col1:
 
 with col2:
     st.header("Info")
-    st.write("Qui puoi inserire info utili o istruzioni")
+    st.write("Carica file CSV estratto da Autocad senza elaborazioni (grezzo), dopo elaborazione puoi scaricare Excel formattato.")
     
 if uploaded_file is not None:
     df = pd.read_csv(uploaded_file)
