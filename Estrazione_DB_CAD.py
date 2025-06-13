@@ -7,22 +7,24 @@ st.set_page_config(layout="wide")
 st.title("Estrazione DB CAD da CSV Autocad")
 
 # Layout a colonne
-col1, col2,col3 = st.columns(3)
+col1a, col1b = st.columns(2)
 
-with col1:
+with col1a:
     st.header("Carica il file")
     uploaded_file = st.file_uploader("Carica il file CSV esportato da Autocad", type=["csv"])
 
-with col2:
+with col1b:
     st.header("Info")
     st.write("Qui puoi inserire info utili o istruzioni")
 
 if uploaded_file is not None:
     df = pd.read_csv(uploaded_file)
-
+    
+col2 = st.container()
+with col2:
     st.subheader("Estrazione originale")
     st.dataframe(df)
-
+    
     # Rinomina colonne se presenti
     if "Nome" in df.columns:
         df.rename(columns={"Nome": "Name", "Conteggio": "Count"}, inplace=True)
