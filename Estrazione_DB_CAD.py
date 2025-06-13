@@ -104,15 +104,28 @@ if uploaded_file is not None:
     st.markdown("---")
 
 ### VERIFICHE PRE-PRODUZIONE
-    st.subheader("Pivot per verifica porte")
+    col3, col4, col5 = st.columns(3)
     prod_df["GRUPPO"] = prod_df["GRUPPO"].astype(str).str.strip()
-    filtered_df = prod_df[prod_df["GRUPPO"].isin(["P", "HAP", "VP"])]
-    pivot_ofx_doors = pd.pivot_table(
+
+    with col3:
+        st.subheader("Pivot per verifica porte")
+        filtered_df = prod_df[prod_df["GRUPPO"].isin(["P", "HAP", "VP"])]
+        pivot_ofx_doors = pd.pivot_table(
+            filtered_df,
+            values="Q.TA",
+            index=["FLR", "N.PROSPETTO", "OFX", "GRUPPO", "TIP.COM", "A.N.", "HND"],
+            aggfunc="sum")
+        pivot_ofx_doors = pivot_ofx_doors.reset_index()  # Fondamentale per Streamlit
+        pivot_ofx_doors = pivot_ofx_doors.astype(str).replace("nan", "")  # Rende tutto stringa, evita errori
+    
+        st.dataframe(pivot_ofx_doors)
+
+    with col4:
+        st.subheader("Pivot per verifica assi N e quantità pezzi")
+        grouped_ofx_an = prod_df[prod_df["GRUPPO"].isin(["P", "VP"])]
+        grouped_ofx_an = pd.pivot_table(
         filtered_df,
         values="Q.TA",
-        index=["FLR", "N.PROSPETTO", "OFX", "GRUPPO", "TIP.COM", "A.N.", "HND"],
+        index=["FLR", "N.PROSPETTO", "OFX", "GRUPPO", "A.N."],
         aggfunc="sum")
-    pivot_ofx_doors = pivot_ofx_doors.reset_index()  # Fondamentale per Streamlit
-    pivot_ofx_doors = pivot_ofx_doors.astype(str).replace("nan", "")  # Rende tutto stringa, evita errori
-
-    st.dataframe(pivot_ofx_doors)
+        grouped_ofx_an
