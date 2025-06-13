@@ -1,5 +1,5 @@
 streamlit
-from st_aggrid import AgGrid
+st_aggrid
 pandas
 openpyxl
 numpy
