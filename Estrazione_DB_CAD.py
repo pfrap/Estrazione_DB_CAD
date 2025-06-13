@@ -81,6 +81,8 @@ with col2:
     # Ordina righe
     prod_df.sort_values(by=["GRUPPO", "TIP.COM", "A.N.", "HGT", "L.TOT.", "L.1"], inplace=True)
 
+col3 = st.container()
+    st.markdown("<div style='border:1px solid blue; padding:10px'>Col1A</div>", unsafe_allow_html=True)
 with col3:
     st.subheader("Anteprima dati elaborati")
     st.dataframe(prod_df)
