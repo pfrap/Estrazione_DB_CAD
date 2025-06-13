@@ -81,12 +81,17 @@ if uploaded_file is not None:
     prod_df.to_excel(output, index=False)
     output.seek(0)
 
-    with col2:
-        st.download_button(
-            label="Scarica Excel elaborato",
-            data=output,
-            file_name="Estrazione_DB_CAD.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")    
+    with col1:
+        subcol1, subcol2 = st.columns([5,1])  # Nested columns
+        with subcol1:
+            st.write("Nested 1")
+        with subcol2:
+            st.write("Nested 2")
+            st.download_button(
+                label="Scarica Excel elaborato",
+                data=output,
+                file_name="Estrazione_DB_CAD.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")    
     
     st.markdown("---")
     st.subheader("Dati originali")
