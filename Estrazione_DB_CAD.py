@@ -89,6 +89,9 @@ if uploaded_file is not None:
                 data=output,
                 file_name="Estrazione_DB_CAD.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")    
+    with col2:
+        st.header("Riassunto componenti progetto")
+        df.groupby(["GRUPPO"], dropna=False)["Q.TA"].sum().reset_index()
     
     st.markdown("---")
     st.subheader("Dati originali")
