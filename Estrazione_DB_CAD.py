@@ -2,10 +2,12 @@ import streamlit as st
 import pandas as pd
 import io
 
+st.set_page_config(layout="wide")
+
 st.title("Estrazione DB CAD da CSV Autocad")
 
 # Layout a colonne
-col1, col2 = st.columns(2)
+col1, col2,col3 = st.columns(3)
 
 with col1:
     st.header("Carica il file")
@@ -18,8 +20,8 @@ with col2:
 if uploaded_file is not None:
     df = pd.read_csv(uploaded_file)
 
-    st.subheader("Anteprima dati originali")
-    st.dataframe(df.head())
+    st.subheader("Estrazione originale")
+    st.dataframe(df)
 
     # Rinomina colonne se presenti
     if "Nome" in df.columns:
@@ -77,6 +79,7 @@ if uploaded_file is not None:
     # Ordina righe
     prod_df.sort_values(by=["GRUPPO", "TIP.COM", "A.N.", "HGT", "L.TOT.", "L.1"], inplace=True)
 
+with col3:
     st.subheader("Anteprima dati elaborati")
     st.dataframe(prod_df)
 
