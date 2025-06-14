@@ -39,16 +39,20 @@ def funzione_dati(df):
     if "A.N." in df.columns:
         df.loc[df["A.N."] == 0, "A.N."] = "."
 
-# Metri quadri di vetro
+    # Metri quadri di vetro
     mask = df["GRUPPO"].str.contains("VETRI|VETRO", na=False)
     df.loc[mask, "MQ"] = (
         (pd.to_numeric(df.loc[mask, "HGT"], errors="coerce") *
-        pd.to_numeric(df.loc[mask, "L.TOT."], errors="coerce"))/1000000
-    )
+        pd.to_numeric(df.loc[mask, "L.TOT."], errors="coerce"))/1000000)
+    
+    # Metri lineari di profili
+    mask = df["GRUPPO"].str.contains("HA|HB|TR|HI|VETRI|VETRO", na=False)
+    df.loc[mask, "ML"] = pd.to_numeric(df.loc[mask, "L.TOT."], errors="coerce")/1000
+    
     # Colonne desiderate e creazione se mancanti
     desired_columns = ['GRUPPO', 'TIP.COM', 'HND', 'A.N.', 'HGT', 'L.TOT.', 'L.1', 'L.2', 'L.3',
                        'N01', 'TIPO', 'FINITURA', 'POSIZIONE VETRO ', 'N.PROSPETTO', 'OFX',
-                       'FLR', 'N.CARTIGLIO', 'Q.TA', "MQ"]
+                       'FLR', 'N.CARTIGLIO', 'Q.TA', "MQ","ML"]
     
     for col in desired_columns:
         if col not in df.columns:
@@ -57,4 +61,5 @@ def funzione_dati(df):
 
     # Ordina righe
     prod_df.sort_values(by=["GRUPPO", "TIP.COM", "A.N.", "HGT", "L.TOT.", "L.1"], inplace=True)
+    prod_df["GRUPPO"] = prod_df["GRUPPO"].astype(str).str.strip()
     return prod_df

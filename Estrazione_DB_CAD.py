@@ -3,21 +3,21 @@ import pandas as pd
 import io
 from Funzione_csv import carica_csv
 from Funzione_dati import funzione_dati
+from Funzione_grafico_streamlit import grafico_ofx_multipli
 
 st.set_page_config(layout="wide")
 st.title("Elaborazione CSV estratto da Autocad")
 
-tab1, tab2, tab3 = st.tabs(["Progetto", "Comparazione", "Verifiche"])
+tab1, tab2, tab3 = st.tabs(["Riassunto progetto", "Comparazione DB", "Verifiche macro"])
 with tab1:
     with st.container():
         # Layout a colonne
         col1, col2 = st.columns(2)
         with col1:
             st.header("Carica il file")
-            uploaded_file = st.file_uploader("Carica il file CSV esportato da Autocad", type=["csv"])
+            uploaded_file = st.file_uploader("Carica file CSV estratto da Autocad senza elaborazioni (grezzo), dopo elaborazione puoi scaricare Excel.", type=["csv"])
         with col2:
-            st.header("Info")
-            st.write("Carica file CSV estratto da Autocad senza elaborazioni (grezzo), dopo elaborazione puoi scaricare Excel.")
+            st.header("Overview")
 
 ### FUNZIONE
 if uploaded_file is not None:
@@ -39,9 +39,9 @@ if uploaded_file is not None:
                 file_name="Estrazione_DB_CAD.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")    
 
-    with col2:
+    with col1:
         st.header("Riassunto componenti progetto")
-        grouped_df=prod_df.groupby(["GRUPPO"], dropna=False)[["Q.TA","L.TOT.","MQ"]].sum(numeric_only=True).reset_index()
+        grouped_df=prod_df.groupby(["FLR","GRUPPO"], dropna=False)[["Q.TA","MQ","ML"]].sum(numeric_only=False).reset_index()
         st.dataframe(grouped_df)
           
     with tab2:
@@ -58,8 +58,7 @@ if uploaded_file is not None:
 
     with tab3:
     ### VERIFICHE PRE-PRODUZIONE
-        col6, col7 = st.columns(2)
-        prod_df["GRUPPO"] = prod_df["GRUPPO"].astype(str).str.strip()
+        _="""col6, col7 = st.columns(2)
 
         with col6:
             st.subheader("Pivot per verifica assi N e quantità pezzi")
@@ -83,4 +82,6 @@ if uploaded_file is not None:
                 aggfunc="sum")
             grouped_ofx_mani = grouped_ofx_mani.reset_index()  # Fondamentale per Streamlit
             grouped_ofx_mani = grouped_ofx_mani.astype(str).replace("nan", "")  # Rende tutto stringa, evita errori
-            st.dataframe(grouped_ofx_mani)
+            st.dataframe(grouped_ofx_mani)"""
+    #grafico_streamlit(prod_df)
+        grafico_ofx_multipli(prod_df)
