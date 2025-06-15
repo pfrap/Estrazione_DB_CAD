@@ -43,4 +43,4 @@ def grafico_treemap(df):
         hover_data={"Q.TA": True},
         #title="Composizione del progetto"
         )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig)
