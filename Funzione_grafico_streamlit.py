@@ -35,7 +35,8 @@ def grafico_ofx_multipli(df):
     
     #Concatenazione per HND
     df_filtrato['Label_HND'] = (
-    df_filtrato['GRUPPO'].astype(str) + ' - ' +
+    #df_filtrato['GRUPPO'].astype(str) + ' - ' +
+    df_filtrato['TIP.COM'].astype(str) + ' - ' +
     df_filtrato['HND'].astype(str))
     
     #Concatenazione per TIPCOM
@@ -43,50 +44,57 @@ def grafico_ofx_multipli(df):
     df_filtrato['GRUPPO'].astype(str) + ' - ' +
     df_filtrato['TIP.COM'].astype(str))
    
-    # Raggruppamento
+    # Raggruppamento dataframe
     grouped = (
         df_filtrato
-        .groupby(['FLR', 'OFX', "GRUPPO","TIP.COM","A.N.","HND", "Label_AN","Label_HND"])
-        .size()
-        .reset_index(name='Q.TA')
-    )
+        .groupby(['OFX', "GRUPPO","TIP.COM","A.N.","HND"])["Q.TA"].sum()
+        .reset_index())
+    grouped_HND = (
+            df_filtrato
+            .groupby(['OFX', "GRUPPO","TIP.COM","HND"])["Q.TA"].sum()
+            .reset_index())
+    grouped_AN = (df_filtrato.groupby(["OFX","GRUPPO","TIP.COM","A.N."])["Q.TA"].sum()
+                  .reset_index())
+    
     
     # Altezza in UI streamlit dei grafici
-    Altezza_grafici=350
+    Altezza_grafici=400
 
-    # Grafico per confronto AN
-    fig = px.bar(
-    grouped[~grouped["GRUPPO"].str.contains("HAP")],
-    x='OFX',
-    y='Q.TA',
-    facet_col="FLR",
-    color="Label_AN",
-    barmode='group',
-    text='Q.TA',
-    title="Verifica Asse N",
-    hover_name=None,
-    hover_data={"GRUPPO":True,"A.N.":True,"HND":False, "FLR":False,"Label_AN":False,"OFX":False,"Q.TA":False}
-    )
-    fig.update_traces()
-    fig.update_layout(height=Altezza_grafici)
-    st.plotly_chart(fig, use_container_width=True)
-
+    # Colonne
+    col1, col2=st.columns(2)
+    with col1:
+        # Grafico per confronto AN
+        fig = px.bar(
+        grouped_AN[~grouped_AN["GRUPPO"].str.contains("HAP")],
+        x='OFX',
+        y='Q.TA',
+        #facet_col="OFX",
+        color="A.N.",
+        barmode='group',
+        text='A.N.',
+        title="Verifica Asse N sul piano",
+        hover_name=None,
+        hover_data={"GRUPPO":True,"TIP.COM":True,"A.N.":True,"Q.TA":False}
+        )
+        fig.update_traces()
+        fig.update_layout(height=Altezza_grafici)
+        st.plotly_chart(fig, use_container_width=True)
+    with col2:
+        st.dataframe(grouped)
+    
     # Grafico per confronto HND
     fig = px.bar(
-    grouped,
+    grouped_HND,
     x='OFX',
     y='Q.TA',
-    facet_col="FLR",
-    color="Label_HND",
+    #facet_col="OFX",
+    color="HND",
     barmode='group',
-    text='Q.TA',
-    title="Verifica HND",
+    text='HND',
+    title="Verifica HND sul piano",
     hover_name=None,
-    hover_data={"GRUPPO":True,"A.N.":False,"HND":True, "FLR":False,"Label_HND":False,"OFX":False,"Q.TA":False}
+    hover_data={"GRUPPO":True,"TIP.COM":True,"Q.TA":False}
     )
     fig.update_traces()
     fig.update_layout(height=Altezza_grafici)
     st.plotly_chart(fig, use_container_width=True)
-    
-    # Dataframe per verifiche
-    st.dataframe(grouped[['FLR', 'OFX', "GRUPPO","TIP.COM","A.N.","HND", "Q.TA"]])
