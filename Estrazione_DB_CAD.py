@@ -44,7 +44,7 @@ with tab1:
                 grouped_df_tot=(prod_df.groupby(["FLR","GRUPPO", "TIP.COM"])
                 [["Q.TA"]].sum().reset_index())
                 grafico_treemap(grouped_df_tot)
-
+if uploaded_file is not None:
     with tab2:
         with st.container():
             # Layout a colonne
