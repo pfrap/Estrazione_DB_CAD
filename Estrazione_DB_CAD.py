@@ -36,8 +36,9 @@ with tab1:
         with col2:
             st.header("Overview")   
             st.header("Riassunto componenti progetto")
-            grouped_df=prod_df.groupby(["FLR","GRUPPO"], dropna=False)[["Q.TA","MQ","ML"]].sum(numeric_only=False).reset_index()
-            st.dataframe(grouped_df, height=470)        
+            if uploaded_file is not None:
+                grouped_df=prod_df.groupby(["FLR","GRUPPO"], dropna=False)[["Q.TA","MQ","ML"]].sum(numeric_only=False).reset_index()
+                st.dataframe(grouped_df, height=470)        
         with col1:
             grouped_df_tot=(prod_df.groupby(["FLR","GRUPPO", "TIP.COM"])
             [["Q.TA"]].sum().reset_index())
