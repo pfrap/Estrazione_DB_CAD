@@ -40,9 +40,10 @@ with tab1:
                 grouped_df=prod_df.groupby(["FLR","GRUPPO"], dropna=False)[["Q.TA","MQ","ML"]].sum(numeric_only=False).reset_index()
                 st.dataframe(grouped_df, height=470)        
         with col1:
-            grouped_df_tot=(prod_df.groupby(["FLR","GRUPPO", "TIP.COM"])
-            [["Q.TA"]].sum().reset_index())
-            grafico_treemap(grouped_df_tot)
+            if uploaded_file is not None:
+                grouped_df_tot=(prod_df.groupby(["FLR","GRUPPO", "TIP.COM"])
+                [["Q.TA"]].sum().reset_index())
+                grafico_treemap(grouped_df_tot)
 
     with tab2:
         with st.container():
