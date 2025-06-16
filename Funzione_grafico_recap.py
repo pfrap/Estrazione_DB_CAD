@@ -39,8 +39,9 @@ def grafico_treemap(df):
         values="Q.TA",
         color="GRUPPO",
         #color_continuous_scale="Sunsetdark", #Plasma Agsunset Sunsetdark Inferno
-        color_discrete_sequence=px.colors.qualitative.Set3,  # oppure: Set1, Pastel1, Bold, etc.
+        color_discrete_sequence=px.colors.qualitative.Set2,  # oppure: Set1, Pastel1, Bold, etc.
         hover_data={"Q.TA": True},
         #title="Composizione del progetto"
         )
-    st.plotly_chart(fig)
+    fig.update_layout(height=320,margin=dict(t=0, b=0, l=10, r=10))
+    st.plotly_chart(fig,use_container_width=True)

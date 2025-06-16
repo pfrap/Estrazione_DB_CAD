@@ -46,7 +46,7 @@ def funzione_dati(df):
         pd.to_numeric(df.loc[mask, "L.TOT."], errors="coerce"))/1000000)
     
     # Metri lineari di profili
-    mask = df["GRUPPO"].str.contains("HA|HB|TR|HI|VETRI|VETRO", na=False)
+    mask = df["GRUPPO"].str.contains("HA|HB|TR|HI|P|VETRI|VETRO", na=False)
     df.loc[mask, "ML"] = pd.to_numeric(df.loc[mask, "L.TOT."], errors="coerce")/1000
     
     # Colonne desiderate e creazione se mancanti
