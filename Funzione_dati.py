@@ -28,7 +28,16 @@ def funzione_dati(df):
     # Rinomina colonne
     if "Count" in df.columns:
         df.rename(columns={"Count": "Q.TA"}, inplace=True)
-
+    # Sostituisci valori vuoti
+    df.fillna(".", inplace=True)
+ 
+    if "L.TOT." in df.columns:
+        df.loc[df["L.TOT."] == 0, "L.TOT."] = "."
+    if "HGT" in df.columns:
+        df.loc[df["HGT"] == 0, "HGT"] = "."
+    if "A.N." in df.columns:
+        df.loc[df["A.N."] == 0, "A.N."] = "."
+     
     # Metri quadri di vetro
     if "HGT" in df.columns:
         mask = df["GRUPPO"].str.contains("VETRI|VETRO", na=False)
@@ -44,16 +53,6 @@ def funzione_dati(df):
     desired_columns = ['GRUPPO', 'TIP.COM', 'HND', 'A.N.', 'HGT', 'L.TOT.', 'L.1', 'L.2', 'L.3',
                        'N01', 'TIPO', 'FINITURA', 'POSIZIONE VETRO ', 'N.PROSPETTO', 'OFX',
                        'FLR', 'N.CARTIGLIO', 'Q.TA', "MQ","ML"]
-
-    # Sostituisci valori vuoti
-    df.fillna(".", inplace=True)
- 
-    if "L.TOT." in df.columns:
-        df.loc[df["L.TOT."] == 0, "L.TOT."] = "."
-    if "HGT" in df.columns:
-        df.loc[df["HGT"] == 0, "HGT"] = "."
-    if "A.N." in df.columns:
-        df.loc[df["A.N."] == 0, "A.N."] = "."
  
     for col in desired_columns:
         if col not in df.columns:
