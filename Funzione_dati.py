@@ -54,10 +54,6 @@ def funzione_dati(df):
                        'N01', 'TIPO', 'FINITURA', 'POSIZIONE VETRO ', 'N.PROSPETTO', 'OFX',
                        'FLR', 'N.CARTIGLIO', 'Q.TA', "MQ","ML"]
     
-    # Sostituisci valori vuoti
-    for col in desired_columns:
-        df.loc[df[col] == 0, col] = "."
-    
     for col in desired_columns:
         if col not in df.columns:
             df[col] = "."
