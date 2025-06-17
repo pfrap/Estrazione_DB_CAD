@@ -53,6 +53,9 @@ def funzione_dati(df):
     desired_columns = ['GRUPPO', 'TIP.COM', 'HND', 'A.N.', 'HGT', 'L.TOT.', 'L.1', 'L.2', 'L.3',
                        'N01', 'TIPO', 'FINITURA', 'POSIZIONE VETRO ', 'N.PROSPETTO', 'OFX',
                        'FLR', 'N.CARTIGLIO', 'Q.TA', "MQ","ML"]
+    
+    # Sostituisci valori vuoti
+    df.fillna(".", inplace=True)
  
     for col in desired_columns:
         if col not in df.columns:
