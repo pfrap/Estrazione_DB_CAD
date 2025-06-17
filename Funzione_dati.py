@@ -55,8 +55,9 @@ def funzione_dati(df):
                        'FLR', 'N.CARTIGLIO', 'Q.TA', "MQ","ML"]
     
     # Sostituisci valori vuoti
-    df.fillna(".", inplace=True)
- 
+    for col in desired_columns:
+        df.loc[df[col] == 0, col] = "."
+    
     for col in desired_columns:
         if col not in df.columns:
             df[col] = "."
