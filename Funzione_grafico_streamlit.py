@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+from Funzione_rainbow import *
 
 def grafico_ofx_multipli(df):
     
@@ -35,7 +36,7 @@ def grafico_ofx_multipli(df):
     # DATAFRAME DI PARTENZA: df_filtrato
     
     # Filtro su elementi metri lineari
-    gruppi_target_ml = ['HA', 'HB', 'TR', "P"]
+    gruppi_target_ml = ['HA','HAP', 'HB', 'TR', "P"]
     df_filtrato_ml=df_filtrato[df_filtrato['GRUPPO'].isin(gruppi_target_ml)]
     # Raggruppamento dataframe per controllo metri lineari di parete
     grouped_ml= (
@@ -65,17 +66,19 @@ def grafico_ofx_multipli(df):
 
     col1, col2=st.columns(2)
     with col1:
-        _="""st.dataframe(grouped_ml)
-        ml_HA=grouped_ml.loc[grouped_ml["GRUPPO"]=="HA", "ML"].values[0]
-        ml_TR=grouped_ml.loc[grouped_ml["GRUPPO"]=="TR", "ML"].values[0]
+        #st.dataframe(grouped_ml)
+        ml_HA=round(grouped_ml.loc[grouped_ml["GRUPPO"]=="HA", "ML"].values[0],2)
+        ml_TR=round(grouped_ml.loc[grouped_ml["GRUPPO"]=="TR", "ML"].values[0], 2)
+        ml_HAP=round(grouped_ml.loc[grouped_ml["GRUPPO"]=="HAP", "ML"].values[0],2)
+        ml_HB=round(grouped_ml.loc[grouped_ml["GRUPPO"]=="HB", "ML"].values[0],2)
+        ml_P=round(grouped_ml.loc[grouped_ml["GRUPPO"]=="P", "ML"].values[0],2)
 
-        st.write(f"**L'HA misura {ml_HA}**")
-        st.write(f"**Il TR misura {ml_TR}**")
-        st.write(f"**TR+HA {ml_TR+ml_HA}**")
-Implementare ulteriormente il sommario di verifica ml
-"""
+
+        rainbow_text(f"HA+HAP: {ml_HA+ml_HAP} ≈ TR {ml_TR} ≈ HB+P: {ml_HB+ml_P}", tag="h2")
+        st.write("La somma di HA e HAP deve dare circa la lunghezza del TR e circa la somma di HB e L Porte.")
 
         # Grafico per confronto AN
+        st.subheader("Verifica Asse N porte")
         fig = px.bar(
         grouped_AN_porte[~grouped_AN_porte["GRUPPO"].str.contains("HAP")],
         x='OFX',
@@ -84,7 +87,6 @@ Implementare ulteriormente il sommario di verifica ml
         color="A.N.",
         barmode='group',
         text='A.N.',
-        title="Verifica Asse N porte",
         hover_name=None,
         hover_data={"GRUPPO":True,"TIP.COM":True,"A.N.":True,"Q.TA":False}
         )
@@ -93,9 +95,10 @@ Implementare ulteriormente il sommario di verifica ml
         st.plotly_chart(fig, use_container_width=True)
         
     with col2:
-        st.dataframe(grouped_porte)
+        st.dataframe(grouped_porte, height=520)
     
     # Grafico per confronto HND
+    st.subheader("Verifica HND porte")
     fig = px.bar(
     grouped_HND,
     x='OFX',
@@ -104,7 +107,6 @@ Implementare ulteriormente il sommario di verifica ml
     color="HND",
     barmode='group',
     text='HND',
-    title="Verifica HND porte",
     hover_name=None,
     hover_data={"GRUPPO":True,"TIP.COM":True,"Q.TA":False}
     )
