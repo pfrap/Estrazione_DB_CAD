@@ -40,10 +40,11 @@ def funzione_dati(df):
         df.loc[df["A.N."] == 0, "A.N."] = "."
 
     # Metri quadri di vetro
-    mask = df["GRUPPO"].str.contains("VETRI|VETRO", na=False)
-    df.loc[mask, "MQ"] = (
-        (pd.to_numeric(df.loc[mask, "HGT"], errors="coerce") *
-        pd.to_numeric(df.loc[mask, "L.TOT."], errors="coerce"))/1000000)
+    if "HGT" in df.columns:
+        mask = df["GRUPPO"].str.contains("VETRI|VETRO", na=False)
+        df.loc[mask, "MQ"] = (
+            (pd.to_numeric(df.loc[mask, "HGT"], errors="coerce") *
+            pd.to_numeric(df.loc[mask, "L.TOT."], errors="coerce"))/1000000)
     
     # Metri lineari di profili
     mask = df["GRUPPO"].str.contains("HA|HB|TR|HI|P|VETRI|VETRO", na=False)
