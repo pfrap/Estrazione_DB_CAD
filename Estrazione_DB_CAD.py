@@ -34,7 +34,6 @@ with tab1:
                         file_name="Estrazione_DB_CAD.xlsx",
                         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")   
         with col2:
-            st.header("Overview")   
             st.header("Riassunto componenti progetto")
             if uploaded_file is not None:
                 grouped_df=prod_df.groupby(["FLR","GRUPPO"], dropna=False)[["Q.TA","MQ","ML"]].sum(numeric_only=False).reset_index()
