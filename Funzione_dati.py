@@ -19,11 +19,11 @@ def funzione_dati(df):
 
     if "HGT" in df.columns:
         df["HGT"].fillna(0, inplace=True)
-        df["HGT"] = round(df["HGT"]).astype(int)
+        df["HGT"] = (round(df["HGT"]/ 0.5)*0.5).astype(float)
 
     if "A.N." in df.columns:
         df["A.N."].fillna(0, inplace=True)
-        df["A.N."] = round(df["A.N."]).astype(int)
+        df["A.N."] = (round(df["A.N."] / 0.5) * 0.5).astype(float)
 
     # Rinomina colonne
     if "Count" in df.columns:
