@@ -66,16 +66,17 @@ def grafico_ofx_multipli(df):
 
     col1, col2=st.columns(2)
     with col1:
-        #st.dataframe(grouped_ml)
-        ml_HA=round(grouped_ml.loc[grouped_ml["GRUPPO"]=="HA", "ML"].values[0],2)
-        ml_TR=round(grouped_ml.loc[grouped_ml["GRUPPO"]=="TR", "ML"].values[0], 2)
-        ml_HAP=round(grouped_ml.loc[grouped_ml["GRUPPO"]=="HAP", "ML"].values[0],2)
-        ml_HB=round(grouped_ml.loc[grouped_ml["GRUPPO"]=="HB", "ML"].values[0],2)
-        ml_P=round(grouped_ml.loc[grouped_ml["GRUPPO"]=="P", "ML"].values[0],2)
-
-
-        rainbow_text(f"HA+HAP: {ml_HA+ml_HAP} ≈ TR {ml_TR} ≈ HB+P: {ml_HB+ml_P}", tag="h2")
-        st.write("La somma di HA e HAP deve dare circa la lunghezza del TR e circa la somma di HB e L Porte.")
+        if "HA" not in df["GRUPPO"].values:
+            pass
+        else:
+            #st.dataframe(grouped_ml)
+            ml_HA=round(grouped_ml.loc[grouped_ml["GRUPPO"]=="HA", "ML"].values[0],2)
+            ml_TR=round(grouped_ml.loc[grouped_ml["GRUPPO"]=="TR", "ML"].values[0], 2)
+            ml_HAP=round(grouped_ml.loc[grouped_ml["GRUPPO"]=="HAP", "ML"].values[0],2)
+            ml_HB=round(grouped_ml.loc[grouped_ml["GRUPPO"]=="HB", "ML"].values[0],2)
+            ml_P=round(grouped_ml.loc[grouped_ml["GRUPPO"]=="P", "ML"].values[0],2)
+            rainbow_text(f"HA+HAP: {ml_HA+ml_HAP} ≈ TR {ml_TR} ≈ HB+P: {ml_HB+ml_P}", tag="h2")
+            st.write("La somma di HA e HAP deve dare circa la lunghezza del TR e circa la somma di HB e L Porte.")
 
         # Grafico per confronto AN
         st.subheader("Verifica Asse N porte")
