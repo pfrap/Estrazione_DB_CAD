@@ -6,7 +6,10 @@ from Funzione_dati import funzione_dati
 from Funzione_grafico_streamlit import grafico_ofx_multipli
 from Funzione_grafico_recap import *
 
-st.set_page_config(layout="wide")
+st.set_page_config(
+    layout="wide",
+    page_title="Elaborazione CSV pareti",
+    page_icon="🚀")
 st.title("Elaborazione CSV estratto da Autocad")
 
 tab1, tab2, tab3 = st.tabs(["Riassunto progetto", "Comparazione DB", "Verifiche macro"])
