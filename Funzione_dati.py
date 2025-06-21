@@ -1,6 +1,7 @@
 import pandas as pd
 
- # Creazione colonna GRUPPO
+# Modifica di prova
+# Creazione colonna GRUPPO
 def funzione_dati(df):
     df.loc[df["Name"] == "2015-ETICHETTE VETRI", "GRUPPO"] = "VETRI"
     if "TIPO" in df.columns:
