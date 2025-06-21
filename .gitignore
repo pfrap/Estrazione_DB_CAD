@@ -1,0 +1,57 @@
+# Bytecode Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtualenv
+env/
+venv/
+ENV/
+.venv/
+.env/
+
+# File di configurazione di IDE/editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# File di sistema
+.DS_Store
+Thumbs.db
+
+# Test coverage
+htmlcov/
+.tox/
+.coverage
+.cache
+.nosetests.xml
+coverage.xml
+*.cover
+.pytest_cache/
+
+# Build
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Log e file temporanei
+*.log
+*.tmp
+*.bak
+
+# Jupyter Notebook checkpoint
+.ipynb_checkpoints/
+
+# Config Python
+*.env
+*.ini
+*.cfg
+
+# Profiling
+.prof
+
+# Mac OS
+.AppleDouble
+.LSOverride
