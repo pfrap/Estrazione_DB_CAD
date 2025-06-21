@@ -1,10 +1,10 @@
 import streamlit as st
 import pandas as pd
 import io
-from Funzione_csv import carica_csv
-from Funzione_dati import funzione_dati
-from Funzione_grafico_streamlit import grafico_ofx_multipli
-from Funzione_grafico_recap import *
+from modules.Funzione_csv import carica_csv
+from modules.Funzione_dati import funzione_dati
+from modules.Funzione_grafico_streamlit import grafico_ofx_multipli
+from modules.Funzione_grafico_recap import *
 
 st.set_page_config(
     layout="wide",
