@@ -66,7 +66,7 @@ def grafico_ofx_multipli(df):
 
     col1, col2=st.columns(2)
     with col1:
-        if "HA" not in df["GRUPPO"].values:
+        if any(gruppo not in df_filtrato["GRUPPO"].values for gruppo in ["HA", "HA2"]):
             pass
         else:
             #st.dataframe(grouped_ml)
