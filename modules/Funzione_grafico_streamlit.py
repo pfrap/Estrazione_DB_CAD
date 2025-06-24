@@ -36,7 +36,7 @@ def grafico_ofx_multipli(df):
     # DATAFRAME DI PARTENZA: df_filtrato
     
     # Filtro su elementi metri lineari
-    gruppi_target_ml = ['HA','HAP', 'HB', 'TR', "P"]
+    gruppi_target_ml = ['HA','HA2','HAP', 'HB', 'TR', "P"]
     df_filtrato_ml=df_filtrato[df_filtrato['GRUPPO'].isin(gruppi_target_ml)]
     # Raggruppamento dataframe per controllo metri lineari di parete
     grouped_ml= (
@@ -70,7 +70,9 @@ def grafico_ofx_multipli(df):
             pass
         else:
             #st.dataframe(grouped_ml)
-            ml_HA=round(grouped_ml.loc[grouped_ml["GRUPPO"]=="HA", "ML"].values[0],2)
+            ml_HA1=round(grouped_ml.loc[(grouped_ml["GRUPPO"]=="HA"), "ML"].values[0],2)
+            ml_HA2=round(grouped_ml.loc[(grouped_ml["GRUPPO"]=="HA2"), "ML"].values[0],2)
+            ml_HA=ml_HA1+ml_HA2
             ml_TR=round(grouped_ml.loc[grouped_ml["GRUPPO"]=="TR", "ML"].values[0], 2)
             ml_HAP=round(grouped_ml.loc[grouped_ml["GRUPPO"]=="HAP", "ML"].values[0],2)
             ml_HB=round(grouped_ml.loc[grouped_ml["GRUPPO"]=="HB", "ML"].values[0],2)
