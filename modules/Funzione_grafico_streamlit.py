@@ -3,7 +3,7 @@ import pandas as pd
 import plotly.express as px
 from modules.Funzione_rainbow import *
 
-def grafico_ofx_multipli(df):
+def grafico_ofx_multipli(df, chart_key="default_key"):
     
     if df.empty:
         st.warning("❗Nessun dato con GRUPPO in ['P', 'VP', 'HAP'].")

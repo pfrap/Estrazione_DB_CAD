@@ -3,7 +3,7 @@ import pandas as pd
 # Modifica di prova
 # Creazione colonna GRUPPO
 def funzione_dati(df):
-    df.loc[df["Name"] == "2015-ETICHETTE VETRI", "GRUPPO"] = "VETRI"
+    df.loc[df['Name'].str.contains('VETRI'), "GRUPPO"] = "VETRI"
     if "TIPO" in df.columns:
         df.loc[df["TIPO"].str.contains("T", na=False), "GRUPPO"] = "VETRI PORTE"
     if "L.TOT.1" in df.columns and "L.TOT." in df.columns:
@@ -64,3 +64,4 @@ def funzione_dati(df):
     prod_df.sort_values(by=["GRUPPO", "TIP.COM", "A.N.", "HGT", "L.TOT.", "L.1"], inplace=True)
     prod_df["GRUPPO"] = prod_df["GRUPPO"].astype(str).str.strip()
     return prod_df
+
