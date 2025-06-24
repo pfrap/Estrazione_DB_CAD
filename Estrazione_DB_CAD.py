@@ -60,4 +60,4 @@ if uploaded_file is not None:
                 st.dataframe(prod_df)
 
     with tab3:
-        grafico_ofx_multipli(prod_df,chart_key="ofx_chart_1")
+        grafico_ofx_multipli(prod_df)
