@@ -23,6 +23,7 @@ with tab1:
             ### FUNZIONE
             if uploaded_file is not None:
                 df=carica_csv(uploaded_file)
+                df_originale=df
                 prod_df=funzione_dati(df)
             ### FINE FUNZIONE  
             # Esporta in Excel in memoria
@@ -54,7 +55,7 @@ if uploaded_file is not None:
 
             with col3:
                 st.subheader("Dati originali")
-                st.dataframe(df)
+                st.dataframe(df_originale)
             with col4:
                 st.subheader("Dati elaborati")
                 st.dataframe(prod_df)

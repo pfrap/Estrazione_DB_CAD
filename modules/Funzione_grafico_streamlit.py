@@ -36,7 +36,7 @@ def grafico_ofx_multipli(df):
     # DATAFRAME DI PARTENZA: df_filtrato
     
     # Filtro su elementi metri lineari
-    gruppi_target_ml = ['HA','HA2','HAP', 'HB', 'TR', "P"]
+    gruppi_target_ml = ['HA','HA2','HA3','HAP','HB','HB2','HB3', 'TR','TR2', "P"]
     df_filtrato_ml=df_filtrato[df_filtrato['GRUPPO'].isin(gruppi_target_ml)]
     # Raggruppamento dataframe per controllo metri lineari di parete
     grouped_ml= (
@@ -65,23 +65,62 @@ def grafico_ofx_multipli(df):
     Altezza_grafici=400
 
     col1, col2=st.columns(2)
+    def safe_extract_ml(df, gruppo):
+                try:
+                    return round(df.loc[df["GRUPPO"] == gruppo, "ML"].values[0], 2)
+                except IndexError:
+                    return 0
     with col1:
-        if any(gruppo not in df_filtrato["GRUPPO"].values for gruppo in ["HA", "HA2"]):
-            pass
-        else:
-            #st.dataframe(grouped_ml)
-            ml_HA1=round(grouped_ml.loc[(grouped_ml["GRUPPO"]=="HA"), "ML"].values[0],2)
-            ml_HA2=round(grouped_ml.loc[(grouped_ml["GRUPPO"]=="HA2"), "ML"].values[0],2)
-            ml_HA=ml_HA1+ml_HA2
-            ml_TR=round(grouped_ml.loc[grouped_ml["GRUPPO"]=="TR", "ML"].values[0], 2)
-            ml_HAP=round(grouped_ml.loc[grouped_ml["GRUPPO"]=="HAP", "ML"].values[0],2)
-            ml_HB=round(grouped_ml.loc[grouped_ml["GRUPPO"]=="HB", "ML"].values[0],2)
-            ml_P=round(grouped_ml.loc[grouped_ml["GRUPPO"]=="P", "ML"].values[0],2)
-            rainbow_text(f"HA+HAP: {ml_HA+ml_HAP} ≈ TR {ml_TR} ≈ HB+P: {ml_HB+ml_P}", tag="h2")
-            st.write("La somma di HA e HAP deve dare circa la lunghezza del TR e circa la somma di HB e L Porte.")
+                
+        ml_HA1=safe_extract_ml(grouped_ml, "HA")
+        ml_HA2=safe_extract_ml(grouped_ml, "HA2")
+        ml_HA3=safe_extract_ml(grouped_ml, "HA3")
+        ml_TR1=safe_extract_ml(grouped_ml, "TR")
+        ml_TR2=safe_extract_ml(grouped_ml, "TR2")
+        ml_HAP=safe_extract_ml(grouped_ml, "HAP")
+        ml_HB1=safe_extract_ml(grouped_ml, "HB")
+        ml_HB2=safe_extract_ml(grouped_ml, "HB2")
+        ml_HB3=safe_extract_ml(grouped_ml, "HB3")
 
+        ml_HA=ml_HA1+ml_HA2+ml_HA3
+        ml_HB=ml_HB1+ml_HB2+ml_HB3
+        ml_TR=ml_TR1+ml_TR2
+
+        ml_P=safe_extract_ml(grouped_ml, "P")
+        
+        rainbow_text(f"HA+HAP: {ml_HA+ml_HAP} ≈ TR {ml_TR} ≈ HB+P: {ml_HB+ml_P}", tag="h2")
+        st.write("La somma di HA e HAP deve dare circa la lunghezza del TR e circa la somma di HB e L Porte.")
+        st.write(ml_TR2)
+    with col2:
+
+        filtri_includi = ['TR', 'HA', 'HB', "P"]
+        pattern_includi = '|'.join(filtri_includi)
+
+        filtri_escludi = ['VETRI',"VP"]
+        pattern_escludi = '|'.join(filtri_escludi)
+
+        df_filtrato_orizzontali = df[
+            df['GRUPPO'].str.contains(pattern_includi, na=False) & 
+            ~df['GRUPPO'].str.contains(pattern_escludi, na=False)
+        ]
+        
+        # Raggruppa e somma
+        grouped_df = (
+            df_filtrato_orizzontali
+            .groupby(["FLR", "GRUPPO"], dropna=False)[["Q.TA", "ML"]]
+            .sum(numeric_only=False)
+            .reset_index()
+        )
+        st.subheader("Riassunto metri lineari di parete")
+        st.dataframe(grouped_df, height=350)
+
+    st.header("Verifica Asse N porte")
+    col3, col4=st.columns(2)
+
+    with col3:
+    
         # Grafico per confronto AN
-        st.subheader("Verifica Asse N porte")
+        #st.subheader("Verifica Asse N porte")
         fig = px.bar(
         grouped_AN_porte[~grouped_AN_porte["GRUPPO"].str.contains("HAP")],
         x='OFX',
@@ -96,12 +135,11 @@ def grafico_ofx_multipli(df):
         fig.update_traces()
         fig.update_layout(height=Altezza_grafici)
         st.plotly_chart(fig, use_container_width=True)
-        
-    with col2:
+
+    with col4:
         st.dataframe(grouped_porte, height=520)
-    
-    # Grafico per confronto HND
-    st.subheader("Verifica HND porte")
+        # Grafico per confronto HND
+    st.header("Verifica HND porte")
     fig = px.bar(
     grouped_HND,
     x='OFX',
@@ -115,4 +153,4 @@ def grafico_ofx_multipli(df):
     )
     fig.update_traces()
     fig.update_layout(height=Altezza_grafici)
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, use_container_width=True, key=f"grafico_hnd_{selezione_flr}_{'_'.join(selezione_ofx)}")
