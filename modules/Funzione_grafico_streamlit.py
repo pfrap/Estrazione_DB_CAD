@@ -78,16 +78,16 @@ def grafico_ofx_multipli(df):
         ml_HA3=safe_extract_ml(grouped_ml, "HA3")
         ml_TR1=safe_extract_ml(grouped_ml, "TR")
         ml_TR2=safe_extract_ml(grouped_ml, "TR2")
-        ml_HAP=safe_extract_ml(grouped_ml, "HAP")
+        ml_HAP=round(safe_extract_ml(grouped_ml, "HAP"),2)
         ml_HB1=safe_extract_ml(grouped_ml, "HB")
         ml_HB2=safe_extract_ml(grouped_ml, "HB2")
         ml_HB3=safe_extract_ml(grouped_ml, "HB3")
 
-        ml_HA=ml_HA1+ml_HA2+ml_HA3
-        ml_HB=ml_HB1+ml_HB2+ml_HB3
-        ml_TR=ml_TR1+ml_TR2
+        ml_HA=round(ml_HA1+ml_HA2+ml_HA3,2)
+        ml_HB=round(ml_HB1+ml_HB2+ml_HB3,2)
+        ml_TR=round(ml_TR1+ml_TR2,2)
 
-        ml_P=safe_extract_ml(grouped_ml, "P")
+        ml_P=round(safe_extract_ml(grouped_ml, "P"),2)
         
         rainbow_text(f"HA+HAP: {ml_HA+ml_HAP} ≈ TR {ml_TR} ≈ HB+P: {ml_HB+ml_P}", tag="h2")
         st.write("La somma di HA e HAP deve dare circa la lunghezza del TR e circa la somma di HB e L Porte.")
