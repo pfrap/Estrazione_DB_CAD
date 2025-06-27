@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from modules.Funzione_rainbow import *
+import numpy as np
 
 def grafico_ofx_multipli(df):
     
@@ -90,7 +91,7 @@ def grafico_ofx_multipli(df):
         
         rainbow_text(f"HA+HAP: {ml_HA+ml_HAP} ≈ TR {ml_TR} ≈ HB+P: {ml_HB+ml_P}", tag="h2")
         st.write("La somma di HA e HAP deve dare circa la lunghezza del TR e circa la somma di HB e L Porte.")
-        st.write(ml_TR2)
+
     with col2:
 
         filtri_includi = ['TR', 'HA', 'HB', "P"]
@@ -153,4 +154,12 @@ def grafico_ofx_multipli(df):
     )
     fig.update_traces()
     fig.update_layout(height=Altezza_grafici)
-    st.plotly_chart(fig, use_container_width=True, key=f"grafico_hnd_{selezione_flr}_{'_'.join(selezione_ofx)}")
+
+    if isinstance(selezione_ofx, (list, tuple, np.ndarray)):
+        key_plot = f"grafico_hnd_{selezione_flr}_{'_'.join(map(str, selezione_ofx))}"
+    elif selezione_ofx is not None:
+        key_plot = f"grafico_hnd_{selezione_flr}_{str(selezione_ofx)}"
+    else:
+        key_plot = f"grafico_hnd_{selezione_flr}_none"
+
+    st.plotly_chart(fig, use_container_width=True, key=key_plot)
