@@ -6,3 +6,8 @@ def carica_csv(file):
     if "Nome" in df.columns:
         df.rename(columns={"Nome": "Name", "Conteggio": "Count"}, inplace=True)
     return df
+
+def carica_xlsx(file):
+    # Legge il file Excel e lo carica in un DataFrame
+    df = pd.read_excel(file)
+    return df
