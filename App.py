@@ -1,22 +1,24 @@
 import streamlit as st
 import pandas as pd
 import io
-from modules.Funzione_csv import *
-from modules.Funzione_dati import *
-from modules.Funzione_grafico_streamlit import grafico_ofx_multipli
-from modules.Funzione_grafico_recap import *
-from modules.Funzione_conferme import *
+from modules.Funzioni_caricamento_file import *
+from modules.Funzione_elaborazione_csv import *
+from modules.Grafico_streamlit import grafico_ofx_multipli
+from modules.Grafico_recap import *
+from modules.Funzione_conferme_layout import *
 
 st.set_page_config(
     layout="wide",
-    page_title="Elaborazione CSV pareti",
+    page_title="Codifica pareti",
     page_icon="🚀")
-st.title("Elaborazione CSV estratto da Autocad")
+st.title("Codifica pareti")
 
 tab1, tab2, tab3, tab4 = st.tabs(["Riassunto progetto", "Comparazione DB", "Verifiche macro", "Codifica articoli"])
+###
+### PARTE DI CARICAMENTO FILE E GRAFICO RECAP ###
+###
 with tab1:
     with st.container():
-        # Layout a colonne
         col1, col2 = st.columns(2)
         with col1:
             st.header("Carica il file")
@@ -47,7 +49,7 @@ with tab1:
 
             ### FUNZIONE EXCEL
             if uploaded_file_xlsx is not None:
-                df_excel = pd.read_excel(uploaded_file_xlsx)
+                df_excel = carica_xlsx(uploaded_file_xlsx)
                 prod_df=funzione_dati_xlsx(df_excel)
                 file_name = uploaded_file_xlsx.name
 
@@ -81,15 +83,25 @@ if uploaded_file is not None or uploaded_file_xlsx is not None:
     with col1:
         grouped_df_tot=(prod_df.groupby(["FLR","GRUPPO", "TIP.COM"])
         [["Q.TA"]].sum().reset_index())
+
+        #Funzione con grafico treemap per resoconto
         grafico_treemap(grouped_df_tot)
+                
+    ###
+    ### PARTE DI CONTROLLO TRAMITE GRAFICI APPOSITI ###
+    ###
     with tab3:
         grafico_ofx_multipli(prod_df)
+
+    ###
+    ### PARTE DI CODIFICA POST ESTRAZIONE E IMPORT TRACCIATO AS400 ###
+    ###
     with tab4:
         tab_conferme(prod_df)
+        
 if uploaded_file is not None:
     with tab2:
         with st.container():
-            # Layout a colonne
             col3, col4 = st.columns(2)
 
             with col3:
@@ -99,4 +111,13 @@ if uploaded_file is not None:
                 st.subheader("Dati elaborati")
                 st.dataframe(prod_df)
 
-    
+if uploaded_file_xlsx is None and uploaded_file is None:
+    with tab4:
+        col4a, col4b = st.columns(2)
+        with col4a:
+            uploaded_file_conf = st.file_uploader("Carica file excel con codici per conferma già elaborati.", 
+                                                type=["xlsx"],
+                                                    key="uploader_conf")
+        if uploaded_file_conf is not None:
+            df_excel_conf = pd.read_excel(uploaded_file_conf)
+            tab_conferme(df_excel_conf)

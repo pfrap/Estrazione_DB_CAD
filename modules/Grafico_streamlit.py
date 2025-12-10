@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from modules.Funzione_rainbow import *
+from modules.Rainbow_text import *
 import numpy as np
 
 def grafico_ofx_multipli(df):

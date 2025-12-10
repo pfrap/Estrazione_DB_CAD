@@ -1,15 +1,20 @@
 import streamlit as st
 import io
-from modules.Moduli_conferme import *
+from modules.Funzione_conferme_moduli import *
+from modules.Funzioni_caricamento_file import *
+
 import pandas as pd
 
 def tab_conferme(prod_df):
-    with st.container():
+    cont_a=st.container()
+    cont_b=st.container()
+
+    with cont_a:
         # ======================
         # Import dizionario annidato (MACRO_SISTEMA → SISTEMA → C1 → C2 → CONCAT_3)
         # ======================
         nested_dict = df_to_nested_dict()
-
+        
         # --- Inizializzazione stato ---
         if "prod_df_edit" not in st.session_state:
             st.session_state["prod_df_edit"] = prod_df.copy()
@@ -26,7 +31,7 @@ def tab_conferme(prod_df):
 
         col1, col2, col3 = st.columns([0.4,0.2,0.4],gap="small")
         with col1:
-            st.subheader("Filtri database produzione")
+            st.subheader("Filtri database produzione")            
             gruppo_filter = st.text_input("Filtra per GRUPPO:", value="", key="filtro_gruppo")
             tipcom_filter = st.text_input("Filtra per TIP.COM:", value="", key="filtro_tipcom")
             
@@ -135,7 +140,7 @@ def tab_conferme(prod_df):
             # ======================
             # Data editor (modifica manuale)
             # ======================
-            st.subheader("Database produzione, modificabile anche manualmente")
+            st.subheader("Database produzione")
             edited_df = st.data_editor(
                 filtered_df,
                 use_container_width=True,
@@ -178,3 +183,110 @@ def tab_conferme(prod_df):
                     file_name="Estrazione_DB_CAD_edit.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 )
+
+    with cont_b:
+        st.subheader("Elaborazione import AS400")
+        cont_b1=st.container()
+        cont_b2=st.container()
+        with cont_b1:
+            colb1a, colb1b,colb1c = st.columns([0.2,0.2,0.6],gap="small")
+        with cont_b1:
+            # Template iniziale (immutabile)
+            if "import_as400_template" not in st.session_state:
+                st.session_state["import_as400_template"] = carica_xlsx("data/Tracciato_import_as400.xlsx")
+
+            # DF editabile dagli utenti
+            if "import_as400" not in st.session_state:
+                st.session_state["import_as400"] = st.session_state["import_as400_template"].copy()
+
+            mapping_singolo = {
+                "ARTICOLO":"XLSCDAR",
+                "HND":"XLSOP02",
+                "A.N.":"XLSALTZ",
+                "HGT":"XLSALTZ",
+                "L.TOT.":"XLSLRGH",
+                "FINITURA":"XLSOP01",
+                "POSIZIONE VETRO ":"XLSNOT4",
+                "Q.TA":"XLSQTOR"
+            }
+
+            mapping_concat = {
+                "XLSNOT2":["L1=:L.1","L2=:L.2","L3=:L.3"],
+                "XLSNOT1":["EL :N.PROSPETTO","OFX :OFX","FLR :FLR","DRW :N.CARTIGLIO"]
+            }
+            
+            mapping_fisso = {
+                "XLSCBXB1": "012",
+                "XLSCBXB2": "P25",
+                "XLSVR01": "5FP",
+                "XLSVR02": "5HN",
+                "XLSVR03": "5LB"
+            }
+            column_config={
+                    "XLSNRREV":None,
+                    "XLSIDPN":None,
+                    "XLSDSPNO":None,
+                    "XLSIDST":None,
+                    "XLSDSSTN":None,
+                    "XLSIDCM":None,
+                    "XLSCDCMP":None,
+                    "XLSCCMP":None,
+                    "XLSQCMP":None,
+                    "XLSNRG0":None,
+                    "XLSNRG1":None,
+                    "LIBERO COMMERCIALE":None,
+                    "LIBERO COMMERCIALE.1":None,
+                    "LIBERO COMMERCIALE.2":None,
+                    "XLSCBTST":None,
+                    "XLSTXTST":None,
+                    "XLSCVRS":None,
+                    "XLSTDAR":None,
+                    "XLSPSC1":None,
+                    "XLSPSC2":None,
+                    "XLSAGRZ":None,
+                    "XLSRGA0":None,
+                    "XLSDTPC":None,
+                    "XLSTXDS1":None,
+                }
+            with colb1a:
+                # 🔄 BOTTONE PER GENERARE AS400 DA PRODUZIONE
+                if st.button("🔄 Aggiorna AS400 da Database Produzione"):
+                    st.session_state["import_as400"] = trasferisci_dati(
+                    df_origine=st.session_state["prod_df_edit"],
+                    df_destinazione=st.session_state["import_as400_template"].copy(),
+                    mapping_singolo=mapping_singolo,
+                    mapping_concat=mapping_concat,
+                    start_row=2,
+                    sep_concat="/",  # esempio di separatore
+                    mapping_fisso=mapping_fisso
+                )
+                    st.success("Dati import AS400 aggiornati.")
+                    st.rerun()
+        with cont_b2:
+            # Editor modificabile
+            edited_import_as400 = st.data_editor(
+                st.session_state["import_as400"],
+                use_container_width=True,
+                column_config=column_config,
+                num_rows="dynamic",
+                key="editor_as400",
+                height=600
+            )
+            st.session_state["import_as400"] = edited_import_as400
+
+        with colb1b:
+            # ======================
+            # 📤 Pulsante Esportazione
+            # ======================
+            output_as400 = io.BytesIO()
+            edited_import_as400.to_excel(output_as400, index=False)
+            output_as400.seek(0)
+
+            st.download_button(
+                label="📤 Esporta AS400 elaborato",
+                data=output_as400,
+                file_name="AS400_elaborato.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
+    with cont_b1:
+        st.write("Ricordarsi di editare variante 5LB, e controllare numeri conferme dopo aver esportato!")
