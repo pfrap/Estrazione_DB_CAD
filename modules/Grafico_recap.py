@@ -35,7 +35,7 @@ def grafico_sunburst(df):
 def grafico_treemap(df):
     fig = px.treemap(
         df,
-        path=["FLR", "GRUPPO", "TIP.COM"],
+        path=["FLR", "FAMIGLIA","GRUPPO","ARTICOLO","TIP.COM"],
         values="Q.TA",
         color="GRUPPO",
         #color_continuous_scale="Sunsetdark", #Plasma Agsunset Sunsetdark Inferno

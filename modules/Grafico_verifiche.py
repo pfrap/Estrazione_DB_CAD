@@ -51,13 +51,13 @@ def grafico_ofx_multipli(df):
     # Raggruppamento dataframe per controllo su porte per ufficio
     grouped_porte = (
         df_filtrato_porte
-        .groupby(['OFX', "GRUPPO","TIP.COM","A.N.","HND"])["Q.TA"].sum()
+        .groupby(['OFX',"FAMIGLIA", "GRUPPO","ARTICOLO","TIP.COM","A.N.","HND"])["Q.TA"].sum()
         .reset_index())
     grouped_HND = ( 
             df_filtrato_porte
-            .groupby(['OFX', "GRUPPO","TIP.COM","HND"])["Q.TA"].sum()
+            .groupby(['OFX',"FAMIGLIA", "GRUPPO","ARTICOLO","TIP.COM","HND"])["Q.TA"].sum()
             .reset_index())
-    grouped_AN_porte = (df_filtrato_porte.groupby(["OFX","GRUPPO","TIP.COM","A.N."])["Q.TA"].sum()
+    grouped_AN_porte = (df_filtrato_porte.groupby(["OFX","FAMIGLIA", "GRUPPO","ARTICOLO","TIP.COM","A.N."])["Q.TA"].sum()
                   .reset_index())
 
     ############## INIZIO SCRITTURA DEL LAYOUT EFFETTIVO ##############
@@ -108,7 +108,7 @@ def grafico_ofx_multipli(df):
         # Raggruppa e somma
         grouped_df = (
             df_filtrato_orizzontali
-            .groupby(["FLR", "GRUPPO"], dropna=False)[["Q.TA", "ML"]]
+            .groupby(["FLR","FAMIGLIA", "GRUPPO","ARTICOLO"], dropna=False)[["Q.TA", "ML"]]
             .sum(numeric_only=False)
             .reset_index()
         )

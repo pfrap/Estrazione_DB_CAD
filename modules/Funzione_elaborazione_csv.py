@@ -65,11 +65,11 @@ def funzione_dati(df):
     
     # Colonne desiderate e creazione se mancanti
     if "N03" in df.columns:
-        desired_columns = ['GRUPPO', 'TIP.COM', 'HND', 'A.N.', 'HGT', 'L.TOT.', 'L.1', 'L.2', 'L.3',
+        desired_columns = ['FAMIGLIA','GRUPPO','ARTICOLO','DESCRIZIONE', 'TIP.COM', 'HND', 'A.N.', 'HGT', 'L.TOT.', 'L.1', 'L.2', 'L.3',
                        'N01','N02','N03', 'TIPO', 'FINITURA', 'POSIZIONE VETRO ', 'N.PROSPETTO', 'OFX',
                        'FLR', 'N.CARTIGLIO', 'Q.TA', "MQ","ML"]
     else:
-        desired_columns = ['GRUPPO', 'TIP.COM', 'HND', 'A.N.', 'HGT', 'L.TOT.', 'L.1', 'L.2', 'L.3',
+        desired_columns = ['FAMIGLIA','GRUPPO','ARTICOLO','DESCRIZIONE', 'TIP.COM', 'HND', 'A.N.', 'HGT', 'L.TOT.', 'L.1', 'L.2', 'L.3',
                        'N01', 'TIPO', 'FINITURA', 'POSIZIONE VETRO ', 'N.PROSPETTO', 'OFX',
                        'FLR', 'N.CARTIGLIO', 'Q.TA', "MQ","ML"]
     
@@ -97,11 +97,11 @@ def funzione_dati_xlsx(df):
     
     # Colonne desiderate e creazione se mancanti
     if "N03" in df.columns:
-        desired_columns = ['GRUPPO', 'TIP.COM', 'HND', 'A.N.', 'HGT', 'L.TOT.', 'L.1', 'L.2', 'L.3',
+        desired_columns = ['FAMIGLIA','GRUPPO','ARTICOLO','DESCRIZIONE','TIP.COM', 'HND', 'A.N.', 'HGT', 'L.TOT.', 'L.1', 'L.2', 'L.3',
                        'N01','N02','N03', 'TIPO', 'FINITURA', 'POSIZIONE VETRO ', 'N.PROSPETTO', 'OFX',
                        'FLR', 'N.CARTIGLIO', 'Q.TA', "MQ","ML"]
     else:
-        desired_columns = ['GRUPPO', 'TIP.COM', 'HND', 'A.N.', 'HGT', 'L.TOT.', 'L.1', 'L.2', 'L.3',
+        desired_columns = ['FAMIGLIA','GRUPPO','ARTICOLO','DESCRIZIONE','TIP.COM', 'HND', 'A.N.', 'HGT', 'L.TOT.', 'L.1', 'L.2', 'L.3',
                        'N01', 'TIPO', 'FINITURA', 'POSIZIONE VETRO ', 'N.PROSPETTO', 'OFX',
                        'FLR', 'N.CARTIGLIO', 'Q.TA', "MQ","ML"]
     
@@ -111,6 +111,6 @@ def funzione_dati_xlsx(df):
     prod_df = df.loc[:, desired_columns]
 
     # Ordina righe
-    prod_df.sort_values(by=["GRUPPO", "TIP.COM", "A.N.", "HGT", "L.TOT.", "L.1"], inplace=True)
+    prod_df.sort_values(by=['FAMIGLIA','ARTICOLO','DESCRIZIONE',"GRUPPO", "TIP.COM", "A.N.", "HGT", "L.TOT.", "L.1"], inplace=True)
     prod_df["GRUPPO"] = prod_df["GRUPPO"].astype(str).str.strip()
     return prod_df

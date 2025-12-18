@@ -3,7 +3,7 @@ import pandas as pd
 import io
 from modules.Funzioni_caricamento_file import *
 from modules.Funzione_elaborazione_csv import *
-from modules.Grafico_streamlit import grafico_ofx_multipli
+from modules.Grafico_verifiche import grafico_ofx_multipli
 from modules.Grafico_recap import *
 from modules.Funzione_conferme_layout import *
 
@@ -78,10 +78,10 @@ with tab1:
 if uploaded_file is not None or uploaded_file_xlsx is not None:
     with col2:
         st.header("Riassunto componenti progetto")
-        grouped_df=prod_df.groupby(["FLR","GRUPPO"], dropna=False)[["Q.TA","MQ","ML"]].sum(numeric_only=False).reset_index()
+        grouped_df=prod_df.groupby(["FLR","FAMIGLIA","GRUPPO","ARTICOLO"], dropna=False)[["Q.TA","MQ","ML"]].sum(numeric_only=False).reset_index()
         st.dataframe(grouped_df, height=470)        
     with col1:
-        grouped_df_tot=(prod_df.groupby(["FLR","GRUPPO", "TIP.COM"])
+        grouped_df_tot=(prod_df.groupby(["FLR","FAMIGLIA","GRUPPO", "ARTICOLO","TIP.COM"])
         [["Q.TA"]].sum().reset_index())
 
         #Funzione con grafico treemap per resoconto
