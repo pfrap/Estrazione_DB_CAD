@@ -21,7 +21,7 @@ def tab_conferme(prod_df):
             for col in ["FAMIGLIA", "ARTICOLO"]:
                 if col not in st.session_state["prod_df_edit"].columns:
                     st.session_state["prod_df_edit"][col] = ""
-        ordine_colonne=["FAMIGLIA","ARTICOLO","GRUPPO","TIP.COM","HND","A.N.","HGT","L.TOT.","L.1","L.2","L.3","N01","TIPO","FINITURA","POSIZIONE VETRO ","N.PROSPETTO","OFX",
+        ordine_colonne=["FAMIGLIA","GRUPPO","ARTICOLO","TIP.COM","HND","A.N.","HGT","L.TOT.","L.1","L.2","L.3","N01","TIPO","FINITURA","POSIZIONE VETRO ","N.PROSPETTO","OFX",
                         "FLR","N.CARTIGLIO","Q.TA","MQ","ML"]
         prod_df_edit = st.session_state["prod_df_edit"][ordine_colonne]
 
@@ -148,7 +148,7 @@ def tab_conferme(prod_df):
             )
 
             # Aggiorna stato con modifiche manuali (più efficiente del loop)
-            st.session_state["prod_df_edit"].update(edited_df)
+            st.session_state["prod_df_edit"].loc[edited_df.index, edited_df.columns] = edited_df
             filtered_df = prod_df_edit.loc[filtered_df.index].copy()  # copia sicura
 
             # ======================
@@ -262,6 +262,32 @@ def tab_conferme(prod_df):
                 )
                     st.success("Dati import AS400 aggiornati.")
                     st.rerun()
+            
+            ######################
+            ######################
+            #Verifica importazione
+            # 🔎 Costruisce automaticamente il mapping di controllo
+            mapping_check = build_mapping_check(
+                mapping_singolo=mapping_singolo,
+                mapping_concat=mapping_concat
+            )
+
+            # 🔎 Verifica solo le colonne realmente trasferite
+            errori = check_coerenza_trasferimento(
+                df_origine=st.session_state["prod_df_edit"],
+                df_destinazione=st.session_state["import_as400"],
+                start_row=2,
+                mapping_check=mapping_check
+            )
+
+            if not errori.empty:
+                st.error(f"⚠️ Trovate {len(errori)} incongruenze nel trasferimento")
+                st.dataframe(errori, use_container_width=True)
+            else:
+                st.success("✅ Coerenza OK sulle colonne trasferite")
+
+
+            
         with cont_b2:
             # Editor modificabile
             edited_import_as400 = st.data_editor(
@@ -290,3 +316,5 @@ def tab_conferme(prod_df):
             )
     with cont_b1:
         st.write("Ricordarsi di editare variante 5LB, e controllare numeri conferme dopo aver esportato!")
+
+        

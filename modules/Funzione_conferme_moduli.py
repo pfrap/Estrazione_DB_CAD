@@ -64,89 +64,173 @@ def trasferisci_dati(
     df_destinazione,
     mapping_singolo=None,
     mapping_concat=None,
-    start_row=3,      # riga da cui cominciare a scrivere (0-based → 3 = riga 4)
-    sep_concat="",    # separatore tra colonne concatenate
+    start_row=3,        # riga da cui cominciare a scrivere (0-based)
+    sep_concat="",      # separatore tra pezzi concatenati
     mapping_fisso=None  # dizionario colonna: valore fisso
 ):
     df_dest = df_destinazione.copy()
-    n_orig = len(df_origine)
 
-    # 1️⃣ Assicura che df_dest abbia abbastanza righe
-    if len(df_dest) < start_row + n_orig:
-        righe_mancanti = (start_row + n_orig) - len(df_dest)
+    # >>> FONDAMENTALE: lavoriamo per POSIZIONE, non per label dell'indice
+    df_src = df_origine.reset_index(drop=True).copy()
+    n_orig = len(df_src)
+
+    # 1) Assicura che df_dest abbia abbastanza righe
+    needed_len = start_row + n_orig
+    if len(df_dest) < needed_len:
+        righe_mancanti = needed_len - len(df_dest)
         df_extra = pd.DataFrame("", index=range(righe_mancanti), columns=df_dest.columns)
         df_dest = pd.concat([df_dest, df_extra], ignore_index=True)
 
-    # 2️⃣ Scrittura colonne singole (skip valori vuoti, ".", NaN)
+    # helper: valore valido?
+    def is_valid(x) -> bool:
+        if pd.isna(x):
+            return False
+        s = str(x).strip()
+        return s not in ("", ".")
+
+    # 2) MAPPING SINGOLO (coerente per riga)
     if mapping_singolo:
         for col_orig, col_dest in mapping_singolo.items():
-            if col_orig in df_origine.columns and col_dest in df_dest.columns:
-                valori = df_origine[col_orig].astype(str).fillna("")
-                mask = pd.notna(df_origine[col_orig]) & (valori != "") & (valori != ".")
-                df_dest.loc[start_row:start_row+n_orig-1, col_dest] = [
-                    v if m else df_dest.loc[i, col_dest]
-                    for i, (v, m) in enumerate(zip(valori, mask), start=start_row)
-                ]
-            else:
-                st.warning(f"Colonna non trovata: {col_orig} → {col_dest}")
+            if col_orig not in df_src.columns:
+                st.warning(f"Colonna origine non trovata: {col_orig}")
+                continue
+            if col_dest not in df_dest.columns:
+                st.warning(f"Colonna destinazione non trovata: {col_dest}")
+                continue
 
-    # 3️⃣ Scrittura colonne concatenate (skip valori vuoti, ".", NaN)
-# 3️⃣ Scrittura colonne concatenate (skip valori vuoti, ".", NaN)
+            src_col = df_src[col_orig]
+            dest_slice = []
+
+            for i in range(n_orig):
+                v = src_col.iat[i]
+                # se non valido, non sovrascrivere (lascia il template)
+                if is_valid(v):
+                    dest_slice.append(str(v).strip())
+                else:
+                    dest_slice.append(df_dest.at[start_row + i, col_dest])
+
+            df_dest.loc[start_row:start_row + n_orig - 1, col_dest] = dest_slice
+
+    # 3) MAPPING CONCAT (coerente per riga, separatore SOLO tra valori validi)
     if mapping_concat:
         for col_dest, lista in mapping_concat.items():
+            if col_dest not in df_dest.columns:
+                st.warning(f"Colonna destinazione concat non trovata: {col_dest}")
+                continue
 
-            risultati = []  # risultato finale per ogni riga
+            risultati = []
 
-            for idx in range(n_orig):
+            for i in range(n_orig):
+                pezzi_validi = []
 
-                pezzi_validi = []  # pezzi non vuoti per la riga corrente
+                for token in lista:
+                    # testo fisso
+                    if isinstance(token, str) and token.startswith("TEXT:"):
+                        txt = token.replace("TEXT:", "")
+                        if txt != "":
+                            pezzi_validi.append(txt)
+                        continue
 
-                for c in lista:
-
-                    # TEXT: valore fisso
-                    if isinstance(c, str) and c.startswith("TEXT:"):
-                        valore = c.replace("TEXT:", "")
-
-                    # prefisso:colonna
-                    elif isinstance(c, str) and ":" in c:
-                        prefisso, col = c.split(":", 1)
-                        if col in df_origine.columns:
-                            v = df_origine.loc[idx, col]
-                            if pd.notna(v) and str(v) not in ("", "."):
-                                valore = prefisso + str(v)
-                            else:
-                                valore = ""
+                    # prefisso:colonna (attenzione: questa sintassi entra anche per "OFX:OFX")
+                    if isinstance(token, str) and ":" in token:
+                        prefisso, col_name = token.split(":", 1)
+                        col_name = col_name.strip()
+                        if col_name in df_src.columns:
+                            v = df_src[col_name].iat[i]   # <<< POSIZIONALE
+                            if is_valid(v):
+                                pezzi_validi.append(f"{prefisso}{str(v).strip()}")
                         else:
-                            valore = ""
+                            st.warning(f"Colonna per concatenazione non trovata: {col_name}")
+                        continue
 
                     # colonna normale
+                    if token in df_src.columns:
+                        v = df_src[token].iat[i]        # <<< POSIZIONALE
+                        if is_valid(v):
+                            pezzi_validi.append(str(v).strip())
                     else:
-                        if c in df_origine.columns:
-                            v = df_origine.loc[idx, c]
-                            if pd.notna(v) and str(v) not in ("", "."):
-                                valore = str(v)
-                            else:
-                                valore = ""
-                        else:
-                            valore = ""
+                        st.warning(f"Colonna per concatenazione non trovata: {token}")
 
-                    # aggiungi solo se valido
-                    if valore != "":
-                        pezzi_validi.append(valore)
-
-                # unisci SOLO i pezzi validi con separatore (es: " - ")
                 risultati.append(sep_concat.join(pezzi_validi))
 
-            # scrivi i valori nel dataframe destinazione
-            df_dest.loc[start_row:start_row+n_orig-1, col_dest] = risultati
+            df_dest.loc[start_row:start_row + n_orig - 1, col_dest] = risultati
 
-    # 4️⃣ Scrittura colonne con valore fisso
+    # 4) VALORI FISSI (su tutte le righe generate)
     if mapping_fisso:
         for col, val in mapping_fisso.items():
             if col in df_dest.columns:
-                df_dest.loc[start_row:start_row+n_orig-1, col] = val
+                df_dest.loc[start_row:start_row + n_orig - 1, col] = val
             else:
                 st.warning(f"Colonna destinazione per valore fisso non trovata: {col}")
 
     return df_dest
 
+def check_coerenza_trasferimento(
+    df_origine,
+    df_destinazione,
+    start_row,
+    mapping_check
+):
+    """
+    mapping_check = {
+        "ARTICOLO": "XLSCDAR",
+        "N01": "XLSNOT3",
+        ...
+    }
+    """
+    df_src = df_origine.reset_index(drop=True)
+    df_dst = df_destinazione.reset_index(drop=True)
+
+    errori = []
+
+    n = len(df_src)
+
+    for i in range(n):
+        r_src = df_src.iloc[i]
+        r_dst = df_dst.iloc[start_row + i]
+
+        for col_src, col_dst in mapping_check.items():
+            v_src = r_src.get(col_src)
+            v_dst = r_dst.get(col_dst)
+
+            # normalizzazione
+            v_src = "" if pd.isna(v_src) else str(v_src).strip()
+            v_dst = "" if pd.isna(v_dst) else str(v_dst).strip()
+
+            if v_src != "" and v_src != ".":
+                if v_src not in v_dst:
+                    errori.append({
+                        "riga_produzione": i,
+                        "riga_as400": start_row + i,
+                        "col_origine": col_src,
+                        "valore_origine": v_src,
+                        "col_dest": col_dst,
+                        "valore_dest": v_dst
+                    })
+
+    return pd.DataFrame(errori)
+
+def build_mapping_check(mapping_singolo=None, mapping_concat=None):
+    """
+    Ritorna un mapping {col_origine: col_dest}
+    SOLO per le colonne effettivamente trasferite.
+    """
+    mapping_check = {}
+
+    # colonne singole
+    if mapping_singolo:
+        for col_orig, col_dest in mapping_singolo.items():
+            mapping_check[col_orig] = col_dest
+
+    # colonne concatenate
+    if mapping_concat:
+        for col_dest, lista in mapping_concat.items():
+            for token in lista:
+                if isinstance(token, str) and ":" in token:
+                    _, col_orig = token.split(":", 1)
+                    mapping_check[col_orig.strip()] = col_dest
+                elif isinstance(token, str) and token.startswith("TEXT:"):
+                    # testo fisso → non va controllato
+                    continue
+
+    return mapping_check
