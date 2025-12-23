@@ -1,320 +1,247 @@
 import streamlit as st
 import io
-from modules.Funzione_conferme_moduli import *
-from modules.Funzioni_caricamento_file import *
-
 import pandas as pd
 
-def tab_conferme(prod_df):
-    cont_a=st.container()
-    cont_b=st.container()
+from modules.Funzione_conferme_moduli import (
+    df_to_nested_dict,
+    aggiorna_articoli,
+    importa_as400,
+    verifica_as400,
+)
+from modules.Funzioni_caricamento_file import carica_xlsx
 
-    with cont_a:
-        # ======================
-        # Import dizionario annidato (MACRO_SISTEMA → SISTEMA → C1 → C2 → CONCAT_3)
-        # ======================
-        nested_dict = df_to_nested_dict()
-        
-        # --- Inizializzazione stato ---
-        if "prod_df_edit" not in st.session_state:
-            st.session_state["prod_df_edit"] = prod_df.copy()
-            for col in ["FAMIGLIA", "ARTICOLO"]:
-                if col not in st.session_state["prod_df_edit"].columns:
-                    st.session_state["prod_df_edit"][col] = ""
-        ordine_colonne=["FAMIGLIA","GRUPPO","ARTICOLO","TIP.COM","HND","A.N.","HGT","L.TOT.","L.1","L.2","L.3","N01","TIPO","FINITURA","POSIZIONE VETRO ","N.PROSPETTO","OFX",
-                        "FLR","N.CARTIGLIO","Q.TA","MQ","ML"]
-        prod_df_edit = st.session_state["prod_df_edit"][ordine_colonne]
+def _init_state(key, default):
+    if key not in st.session_state:
+        st.session_state[key] = default
 
-        # ======================
-        # Filtri DataFrame (visualizzazione)
-        # ======================
+def tab_conferme(prod_df: pd.DataFrame):
+    """Tab 4: codifica articoli + generazione import AS400."""
 
-        col1, col2, col3 = st.columns([0.4,0.2,0.4],gap="small")
-        with col1:
-            st.subheader("Filtri database produzione")            
-            gruppo_filter = st.text_input("Filtra per GRUPPO:", value="", key="filtro_gruppo")
-            tipcom_filter = st.text_input("Filtra per TIP.COM:", value="", key="filtro_tipcom")
-            
-            # Funzione riutilizzabile per applicare filtri
-            def filtra_df(df):
-                if gruppo_filter:
-                    df = df[df["GRUPPO"].astype(str).str.fullmatch(gruppo_filter, case=False, na=False)]
-                if tipcom_filter:
-                    df = df[df["TIP.COM"].astype(str).str.fullmatch(tipcom_filter, case=False, na=False)]
-                return df
+    # ======================
+    # Dizionario articoli (MACRO → SISTEMA → C1 → C2 → CONCAT_3)
+    # ======================
+    nested_dict = df_to_nested_dict()
 
-            filtered_df = filtra_df(prod_df_edit.copy())
-            st.write(f"Righe filtrate: {len(filtered_df)} / {len(prod_df_edit)}")
+    # ======================
+    # Stato: DB produzione editabile
+    # ======================
+    _init_state("prod_df_edit", prod_df.copy())
 
-        # ======================
-        # Filtri Dizionario (batch update)
-        # ======================
-        with col1:
-            st.subheader("Seleziona articolo da dizionario")
-            col_d1, col_d2, col_d3, col_d4, col_d5 = st.columns(5)
+    # garantisce colonne minime
+    for col in ["FAMIGLIA", "ARTICOLO"]:
+        if col not in st.session_state["prod_df_edit"].columns:
+            st.session_state["prod_df_edit"][col] = ""
 
-            with col_d1:
-                filtro_macro = st.selectbox("MACRO_SISTEMA", [""] + sorted(nested_dict.keys()))
+    ordine_colonne = [
+        "FAMIGLIA","GRUPPO","ARTICOLO","TIP.COM","HND","A.N.","HGT","L.TOT.","L.1","L.2","L.3","N01","TIPO","FINITURA",
+        "POSIZIONE VETRO ","N.PROSPETTO","OFX","FLR","N.CARTIGLIO","Q.TA","MQ","ML"
+    ]
+    df_edit = st.session_state["prod_df_edit"].reindex(columns=ordine_colonne).copy()
 
-            with col_d2:
-                macro_dict = nested_dict.get(filtro_macro, {}) if filtro_macro else {}
-                filtro_sistema = st.selectbox("SISTEMA", [""] + sorted(macro_dict.keys()))
+    # ======================
+    # UI filtri + selezione dizionario
+    # ======================
+    col1, col2, col3 = st.columns([0.4, 0.2, 0.4], gap="small")
 
-            with col_d3:
-                c1_dict = macro_dict.get(filtro_sistema, {}) if filtro_sistema else {}
-                filtro_c1 = st.selectbox("C1", [""] + sorted(c1_dict.keys()))
+    with col1:
+        st.subheader("Filtri database produzione")
+        gruppo_filter = st.text_input("Filtra per GRUPPO (regex fullmatch):", value="", key="filtro_gruppo")
+        tipcom_filter = st.text_input("Filtra per TIP.COM (regex fullmatch):", value="", key="filtro_tipcom")
 
-            with col_d4:
-                c2_dict = c1_dict.get(filtro_c1, {}) if filtro_c1 else {}
-                filtro_c2 = st.selectbox("C2", [""] + sorted(c2_dict.keys()))
+        def filtra_df(df: pd.DataFrame) -> pd.DataFrame:
+            out = df
+            if gruppo_filter:
+                out = out[out["GRUPPO"].astype(str).str.fullmatch(gruppo_filter, case=False, na=False)]
+            if tipcom_filter:
+                out = out[out["TIP.COM"].astype(str).str.fullmatch(tipcom_filter, case=False, na=False)]
+            return out
 
-            with col_d5:
-                articoli_dict = c2_dict.get(filtro_c2, {}) if filtro_c2 else {}
-                articoli_validi = list(articoli_dict.keys())  # chiavi = CONCAT_3
-                concat3_scelto = st.selectbox("ARTICOLO", [""] + articoli_validi)
+        filtered_df = filtra_df(df_edit)
+        st.caption(f"Righe filtrate: {len(filtered_df)} / {len(df_edit)}")
 
-            col_p1, col_p2, col_p3 = st.columns(3)
+        st.subheader("Seleziona articolo da dizionario")
+        col_d1, col_d2, col_d3, col_d4, col_d5 = st.columns(5)
 
+        with col_d1:
+            filtro_macro = st.selectbox("MACRO_SISTEMA", [""] + sorted(nested_dict.keys()))
+        with col_d2:
+            macro_dict = nested_dict.get(filtro_macro, {}) if filtro_macro else {}
+            filtro_sistema = st.selectbox("SISTEMA", [""] + sorted(macro_dict.keys()))
+        with col_d3:
+            c1_dict = macro_dict.get(filtro_sistema, {}) if filtro_sistema else {}
+            filtro_c1 = st.selectbox("C1", [""] + sorted(c1_dict.keys()))
+        with col_d4:
+            c2_dict = c1_dict.get(filtro_c1, {}) if filtro_c1 else {}
+            filtro_c2 = st.selectbox("C2", [""] + sorted(c2_dict.keys()))
+        with col_d5:
+            articoli_dict = c2_dict.get(filtro_c2, {}) if filtro_c2 else {}
+            articoli_validi = list(articoli_dict.keys())
+            concat3_scelto = st.selectbox("ARTICOLO", [""] + articoli_validi)
 
-        # ======================
-        # ANTEPRIMA IMMAGINE (immediata)
-        # ======================
-        with col2:
-            st.subheader("Anteprima articolo")
+    # ======================
+    # Anteprima articolo
+    # ======================
+    with col2:
+        st.subheader("Anteprima articolo")
+
         if concat3_scelto:
-            valori = articoli_dict.get(concat3_scelto)
-            if valori and valori.get("IMMAGINE_NOME_FILE"):
-                percorso_img = f"{valori['IMMAGINE_NOME_FILE']}"
+            valori = articoli_dict.get(concat3_scelto, {})
+            img = valori.get("IMMAGINE_NOME_FILE")
+            if img:
                 try:
-                    with col2:
-                        st.image(
-                            percorso_img,
-                            caption=f"Anteprima: {concat3_scelto}",
-                            use_container_width=True,
-                        )
-                        # Forza altezza via CSS
-                        st.markdown(
-                            """
-                            <style>
-                            [data-testid="stImage"] img {
-                                height: 300px !important;
-                                object-fit: contain;
-                            }
-                            </style>
-                            """,
-                            unsafe_allow_html=True,
-                        )
-                        # Mostra descrizione e codice neutro conferme
-                        descrizione = valori.get("ID_COMPONENTE_ARTICOLO_PADRE_DESCRIZIONE", "N/D")
-                        neutro_conferme = valori.get("NEUTRO_CONFERME", "N/D")
-                        st.markdown(f"**Descrizione:** {descrizione}  \n**Codice neutro conferme:** {neutro_conferme}")
-
+                    st.image(img, caption=f"Anteprima: {concat3_scelto}", use_container_width=True)
+                    st.markdown(
+                        """
+                        <style>
+                        [data-testid="stImage"] img { height: 300px !important; object-fit: contain; }
+                        </style>
+                        """,
+                        unsafe_allow_html=True,
+                    )
                 except Exception:
-                    st.warning(f"Immagine non trovata: {percorso_img}")
+                    st.warning(f"Immagine non trovata: {img}")
             else:
                 st.info("Nessuna immagine disponibile per questo articolo.")
-        with col3:        
-            # ======================
-            # Applica batch update
-            # ======================
-            with col_p1:
-                if st.button("📦 Applica alle righe filtrate", key="batch_apply"):
-                    if filtered_df.empty or not concat3_scelto:
-                        st.warning("Nessuna riga filtrata o articolo non selezionato")
-                    else:
-                        valori = articoli_dict.get(concat3_scelto)
-                        if valori:
-                            prod_df_edit.loc[filtered_df.index, "FAMIGLIA"] = filtro_sistema
-                            prod_df_edit.loc[filtered_df.index, "ARTICOLO"] = valori["NEUTRO_CONFERME"]
 
-                            # Aggiorna stato e forza refresh a video
-                            st.session_state["prod_df_edit"] = prod_df_edit
+            descr = valori.get("ID_COMPONENTE_ARTICOLO_PADRE_DESCRIZIONE", "N/D")
+            neutro = valori.get("NEUTRO_CONFERME", "N/D")
+            st.markdown(f"**Descrizione:** {descr}  \n**Codice neutro conferme:** {neutro}")
 
-                            st.success(
-                                f"Aggiornate {len(filtered_df)} righe con "
-                                f"Famiglia='{filtro_sistema}' e Articolo='{valori['NEUTRO_CONFERME']}'"
-                            )
-                            
-                            st.rerun()  # Forza aggiornamento del DataFrame mostrato
+    # ======================
+    # Applica batch + editor + export
+    # ======================
+    with col3:
+        st.subheader("Database produzione")
+        edited_df = st.data_editor(
+        filtered_df,
+        use_container_width=True,
+        height=500,
+        )
+    with col1:
+        col_p1, col_p2, col_p3 = st.columns(3)
 
-            # ======================
-            # Data editor (modifica manuale)
-            # ======================
-            st.subheader("Database produzione")
-            edited_df = st.data_editor(
-                filtered_df,
-                use_container_width=True,
-                height=500,
-            )
-
-            # Aggiorna stato con modifiche manuali (più efficiente del loop)
-            st.session_state["prod_df_edit"].loc[edited_df.index, edited_df.columns] = edited_df
-            filtered_df = prod_df_edit.loc[filtered_df.index].copy()  # copia sicura
-
-            # ======================
-            # Esporta dati (un solo pulsante)
-            # ======================
-            df_to_export = edited_df.copy()
-
-            # ======================
-            # Definizione colonne numeriche
-            # ======================
-            numeric_cols = [
-                "A.N.", "HGT", "L.TOT.", "L.1", "L.2", "L.3", "Q.TA", "MQ", "ML"]
-            for col in numeric_cols:
-                if col in df_to_export.columns:
-                    df_to_export[col] = pd.to_numeric(df_to_export[col], errors="coerce")
-                    
-            # Crea il buffer per Excel
-            output = io.BytesIO()
-            df_to_export.to_excel(output, index=False)  # mantiene numeri, date, formattazione
-            output.seek(0)
-            with col_p2:
-                if st.button("⚙️ Aggiorna articoli (H/TR)"):
-                    st.session_state["prod_df_edit"] = aggiorna_articoli(st.session_state["prod_df_edit"])
-                    st.success("Articoli aggiornati correttamente (H/TR).")
-                    st.rerun()  # 🔁 forza il refresh immediato del data editor
-
-            with col_p3:
-                # Pulsante di download
-                st.download_button(
-                    label="📤 Esporta Excel finale",
-                    data=output,
-                    file_name="Estrazione_DB_CAD_edit.xlsx",
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                )
-
-    with cont_b:
-        st.subheader("Elaborazione import AS400")
-        cont_b1=st.container()
-        cont_b2=st.container()
-        with cont_b1:
-            colb1a, colb1b,colb1c = st.columns([0.2,0.2,0.6],gap="small")
-        with cont_b1:
-            # Template iniziale (immutabile)
-            if "import_as400_template" not in st.session_state:
-                st.session_state["import_as400_template"] = carica_xlsx("data/Tracciato_import_as400.xlsx")
-
-            # DF editabile dagli utenti
-            if "import_as400" not in st.session_state:
-                st.session_state["import_as400"] = st.session_state["import_as400_template"].copy()
-
-            mapping_singolo = {
-                "ARTICOLO":"XLSCDAR",
-                "HND":"XLSOP02",
-                "A.N.":"XLSALTZ",
-                "HGT":"XLSALTZ",
-                "L.TOT.":"XLSLRGH",
-                "FINITURA":"XLSOP01",
-                "POSIZIONE VETRO ":"XLSNOT4",
-                "Q.TA":"XLSQTOR"
-            }
-
-            mapping_concat = {
-                "XLSNOT2":["L1=:L.1","L2=:L.2","L3=:L.3"],
-                "XLSNOT1":["EL :N.PROSPETTO","OFX :OFX","FLR :FLR","DRW :N.CARTIGLIO"]
-            }
-            
-            mapping_fisso = {
-                "XLSCBXB1": "012",
-                "XLSCBXB2": "P25",
-                "XLSVR01": "5FP",
-                "XLSVR02": "5HN",
-                "XLSVR03": "5LB"
-            }
-            column_config={
-                    "XLSNRREV":None,
-                    "XLSIDPN":None,
-                    "XLSDSPNO":None,
-                    "XLSIDST":None,
-                    "XLSDSSTN":None,
-                    "XLSIDCM":None,
-                    "XLSCDCMP":None,
-                    "XLSCCMP":None,
-                    "XLSQCMP":None,
-                    "XLSNRG0":None,
-                    "XLSNRG1":None,
-                    "LIBERO COMMERCIALE":None,
-                    "LIBERO COMMERCIALE.1":None,
-                    "LIBERO COMMERCIALE.2":None,
-                    "XLSCBTST":None,
-                    "XLSTXTST":None,
-                    "XLSCVRS":None,
-                    "XLSTDAR":None,
-                    "XLSPSC1":None,
-                    "XLSPSC2":None,
-                    "XLSAGRZ":None,
-                    "XLSRGA0":None,
-                    "XLSDTPC":None,
-                    "XLSTXDS1":None,
-                }
-            with colb1a:
-                # 🔄 BOTTONE PER GENERARE AS400 DA PRODUZIONE
-                if st.button("🔄 Aggiorna AS400 da Database Produzione"):
-                    st.session_state["import_as400"] = trasferisci_dati(
-                    df_origine=st.session_state["prod_df_edit"],
-                    df_destinazione=st.session_state["import_as400_template"].copy(),
-                    mapping_singolo=mapping_singolo,
-                    mapping_concat=mapping_concat,
-                    start_row=2,
-                    sep_concat="/",  # esempio di separatore
-                    mapping_fisso=mapping_fisso
-                )
-                    st.success("Dati import AS400 aggiornati.")
+        with col_p1:
+            if st.button("📦 Applica alle righe filtrate", key="batch_apply"):
+                if filtered_df.empty or not concat3_scelto:
+                    st.warning("Nessuna riga filtrata o articolo non selezionato.")
+                else:
+                    valori = articoli_dict.get(concat3_scelto, {})
+                    neutro = valori.get("NEUTRO_CONFERME", "")
+                    # aggiorna sul df_edit (stesse index)
+                    df_edit.loc[filtered_df.index, "FAMIGLIA"] = filtro_sistema
+                    df_edit.loc[filtered_df.index, "ARTICOLO"] = neutro
+                    st.session_state["prod_df_edit"] = df_edit
+                    st.success(f"Aggiornate {len(filtered_df)} righe.")
                     st.rerun()
-            
-            ######################
-            ######################
-            #Verifica importazione
-            # 🔎 Costruisce automaticamente il mapping di controllo
-            mapping_check = build_mapping_check(
-                mapping_singolo=mapping_singolo,
-                mapping_concat=mapping_concat
-            )
-
-            # 🔎 Verifica solo le colonne realmente trasferite
-            errori = check_coerenza_trasferimento(
-                df_origine=st.session_state["prod_df_edit"],
-                df_destinazione=st.session_state["import_as400"],
-                start_row=2,
-                mapping_check=mapping_check
-            )
-
-            if not errori.empty:
-                st.error(f"⚠️ Trovate {len(errori)} incongruenze nel trasferimento")
-                st.dataframe(errori, use_container_width=True)
-            else:
-                st.success("✅ Coerenza OK sulle colonne trasferite")
 
 
-            
-        with cont_b2:
-            # Editor modificabile
-            edited_import_as400 = st.data_editor(
-                st.session_state["import_as400"],
-                use_container_width=True,
-                column_config=column_config,
-                num_rows="dynamic",
-                key="editor_as400",
-                height=600
-            )
-            st.session_state["import_as400"] = edited_import_as400
 
-        with colb1b:
-            # ======================
-            # 📤 Pulsante Esportazione
-            # ======================
-            output_as400 = io.BytesIO()
-            edited_import_as400.to_excel(output_as400, index=False)
-            output_as400.seek(0)
+        # scrive le modifiche nel db completo
+        df_edit.loc[edited_df.index, edited_df.columns] = edited_df
+        st.session_state["prod_df_edit"] = df_edit
 
+        # export excel (sempre, con numerici corretti)
+        df_to_export = df_edit.copy()
+        numeric_cols = ["A.N.", "HGT", "L.TOT.", "L.1", "L.2", "L.3", "Q.TA", "MQ", "ML"]
+        for c in numeric_cols:
+            if c in df_to_export.columns:
+                df_to_export[c] = pd.to_numeric(df_to_export[c], errors="coerce")
+
+        out = io.BytesIO()
+        df_to_export.to_excel(out, index=False)
+        out.seek(0)
+
+        with col_p2:
+            if st.button("⚙️ Aggiorna articoli (H/TR)"):
+                st.session_state["prod_df_edit"] = aggiorna_articoli(st.session_state["prod_df_edit"])
+                st.rerun()
+
+        with col_p3:
             st.download_button(
-                label="📤 Esporta AS400 elaborato",
-                data=output_as400,
-                file_name="AS400_elaborato.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                label="📤 Esporta Excel finale",
+                data=out,
+                file_name="Estrazione_DB_CAD_edit.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             )
-    with cont_b1:
-        st.write("Ricordarsi di editare variante 5LB, e controllare numeri conferme dopo aver esportato!")
 
-        
+    # ======================
+    # AS400: import semplice 1:1 (niente concatenazioni)
+    # ======================
+    st.divider()
+    st.subheader("Elaborazione import AS400 (mapping semplice)")
+
+    # Template (immutabile) + versione editabile
+    if "import_as400_template" not in st.session_state:
+        st.session_state["import_as400_template"] = carica_xlsx("data/Tracciato_import_as400.xlsx")
+
+    _init_state("import_as400", st.session_state["import_as400_template"].copy())
+
+    # Mapping semplice (origine -> colonna AS400)
+    mapping_singolo = {
+        "ARTICOLO":"XLSCDAR",
+        "HND":"XLSOP02",
+        "HGT":"XLSALTZ",
+        "L.TOT.":"XLSLRGH",
+        "FINITURA":"XLSOP01",
+        "POSIZIONE VETRO ":"XLSNOT4",
+        "Q.TA":"XLSQTOR",
+    }
+
+    mapping_fisso = {
+        "XLSCBXB1": "012",
+        "XLSCBXB2": "P25",
+        "XLSVR01": "5FP",
+        "XLSVR02": "5HN",
+        "XLSVR03": "5LB",
+    }
+
+    colb1a, colb1b, _ = st.columns([0.25, 0.25, 0.5], gap="small")
+
+    with colb1a:
+        if st.button("🔄 Aggiorna AS400 da Database Produzione"):
+            st.session_state["import_as400"] = importa_as400(
+                df_origine=st.session_state["prod_df_edit"],
+                df_template=st.session_state["import_as400_template"],
+                mapping_orig_to_dest=mapping_singolo,
+                start_row=2,
+                mapping_fisso=mapping_fisso,
+            )
+            st.success("Dati import AS400 aggiornati.")
+            st.rerun()
+
+    # Verifica coerenza (solo colonne mappate)
+    errori = verifica_as400(
+        df_origine=st.session_state["prod_df_edit"],
+        df_destinazione=st.session_state["import_as400"],
+        mapping_orig_to_dest=mapping_singolo,
+        start_row=2,
+    )
+
+    if not errori.empty:
+        st.error(f"⚠️ Trovate {len(errori)} incongruenze nel trasferimento")
+        st.dataframe(errori, use_container_width=True)
+    else:
+        st.success("✅ Coerenza OK sulle colonne trasferite")
+
+    # Editor AS400
+    edited_as400 = st.data_editor(
+        st.session_state["import_as400"],
+        use_container_width=True,
+        num_rows="dynamic",
+        key="editor_as400",
+        height=600,
+    )
+    st.session_state["import_as400"] = edited_as400
+
+    with colb1b:
+        out_as400 = io.BytesIO()
+        edited_as400.to_excel(out_as400, index=False)
+        out_as400.seek(0)
+        st.download_button(
+            label="📤 Esporta AS400 elaborato",
+            data=out_as400,
+            file_name="AS400_elaborato.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
+
+    st.caption("Nota: ora l'AS400 è 1:1. Se ti servono campi concatenati, conviene crearli nel DB produzione come colonne dedicate.")

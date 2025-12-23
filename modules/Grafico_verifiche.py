@@ -27,9 +27,7 @@ def grafico_ofx_multipli(df):
     df_filtrato = df[df['OFX'].isin(selezione_ofx)]
 
     #Concatenazione per TIPCOM
-    df_filtrato['Label_TIPCOM'] = (
-    df_filtrato['GRUPPO'].astype(str) + ' - ' +
-    df_filtrato['TIP.COM'].astype(str))
+    df_filtrato = df_filtrato.assign(Label_TIPCOM=(df_filtrato['GRUPPO'].astype(str) + ' - ' + df_filtrato['TIP.COM'].astype(str)))
 
     ############## DB FILTRATO IN BASE A PIANO E UFFICIO ##############
     
