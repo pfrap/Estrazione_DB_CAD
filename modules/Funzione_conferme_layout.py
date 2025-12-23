@@ -2,12 +2,7 @@ import streamlit as st
 import io
 import pandas as pd
 
-from modules.Funzione_conferme_moduli import (
-    df_to_nested_dict,
-    aggiorna_articoli,
-    importa_as400,
-    verifica_as400,
-)
+from modules.Funzione_conferme_moduli import *
 from modules.Funzioni_caricamento_file import carica_xlsx
 
 def _init_state(key, default):
@@ -25,6 +20,7 @@ def tab_conferme(prod_df: pd.DataFrame):
     # ======================
     # Stato: DB produzione editabile
     # ======================
+
     _init_state("prod_df_edit", prod_df.copy())
 
     # garantisce colonne minime
@@ -169,6 +165,7 @@ def tab_conferme(prod_df: pd.DataFrame):
     # ======================
     st.divider()
     st.subheader("Elaborazione import AS400 (mapping semplice)")
+    st.caption("Nota: ora l'AS400 è 1:1. Se ti servono campi concatenati, conviene crearli nel DB produzione come colonne dedicate.")
 
     # Template (immutabile) + versione editabile
     if "import_as400_template" not in st.session_state:
@@ -180,11 +177,13 @@ def tab_conferme(prod_df: pd.DataFrame):
     mapping_singolo = {
         "ARTICOLO":"XLSCDAR",
         "HND":"XLSOP02",
-        "HGT":"XLSALTZ",
-        "L.TOT.":"XLSLRGH",
+        "XLSALTZ":"XLSALTZ",
+        "XLSLRGH":"XLSLRGH",
         "FINITURA":"XLSOP01",
-        "POSIZIONE VETRO ":"XLSNOT4",
+        "POSIZIONE VETRO ":"XLSNOT3",
         "Q.TA":"XLSQTOR",
+        "XLSNOT1":"XLSNOT1",
+        "XLSNOT2":"XLSNOT2",
     }
 
     mapping_fisso = {
@@ -199,8 +198,10 @@ def tab_conferme(prod_df: pd.DataFrame):
 
     with colb1a:
         if st.button("🔄 Aggiorna AS400 da Database Produzione"):
+            df_origine=prepara_colonne_as400(st.session_state["prod_df_edit"])
+
             st.session_state["import_as400"] = importa_as400(
-                df_origine=st.session_state["prod_df_edit"],
+                df_origine,
                 df_template=st.session_state["import_as400_template"],
                 mapping_orig_to_dest=mapping_singolo,
                 start_row=2,
@@ -243,5 +244,3 @@ def tab_conferme(prod_df: pd.DataFrame):
             file_name="AS400_elaborato.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
-
-    st.caption("Nota: ora l'AS400 è 1:1. Se ti servono campi concatenati, conviene crearli nel DB produzione come colonne dedicate.")

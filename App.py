@@ -131,7 +131,6 @@ if prod_df is not None:
                 with col4:
                     st.subheader("Dati elaborati")
                     st.dataframe(prod_df)
-
 else:
     with tab4:
         st.info("Carica un CSV o un XLSX nel Tab 'Riassunto progetto' per procedere con la codifica articoli.")

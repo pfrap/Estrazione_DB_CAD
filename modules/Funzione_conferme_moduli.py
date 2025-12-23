@@ -142,3 +142,98 @@ def check_coerenza_trasferimento(df_origine, df_destinazione, start_row, mapping
 def build_mapping_check(mapping_singolo=None, mapping_concat=None):
     # ora è banale: coincide col mapping singolo
     return dict(mapping_singolo or {})
+
+import pandas as pd
+
+import pandas as pd
+
+
+def prepara_colonne_as400(prod_df):
+    """
+    Prende il DataFrame di produzione (prod_df_edit) e:
+    1) Crea XLSNOT1 e XLSNOT2 con concatenazioni
+    2) Crea XLSALTZ e XLSLRGH secondo le regole date
+    3) Ritorna un nuovo DataFrame
+    """
+
+    df = prod_df.copy()
+
+    # -------------------------------------------------
+    # 1) XLSNOT1 e XLSNOT2 (inizializzazione)
+    # -------------------------------------------------
+    df["XLSNOT1"] = ""
+    df["XLSNOT2"] = ""
+
+    # -------------------------------------------------
+    # 2) XLSALTZ e XLSLRGH (inizializzazione)
+    # -------------------------------------------------
+    df["XLSALTZ"] = ""
+    df["XLSLRGH"] = ""
+
+    # -------------------------------------------------
+    # Loop riga per riga (CHIARO E LEGGIBILE)
+    # -------------------------------------------------
+    for idx, row in df.iterrows():
+
+        # ---------- XLSNOT1 ----------
+        parts_not1 = []
+
+        val = row.get("N.PROSPETTO")
+        if pd.notna(val) and str(val).strip() not in ("", ".", "0", "0.0"):
+            parts_not1.append(f"EL: {val}")
+
+        val = row.get("OFX")
+        if pd.notna(val) and str(val).strip() not in ("", ".", "0", "0.0"):
+            parts_not1.append(f"OFX: {val}")
+
+        val = row.get("FLR")
+        if pd.notna(val) and str(val).strip() not in ("", ".", "0", "0.0"):
+            parts_not1.append(f"FLR: {val}")
+
+        val = row.get("N.CARTIGLIO")
+        if pd.notna(val) and str(val).strip() not in ("", ".", "0", "0.0"):
+            parts_not1.append(f"DRW: {val}")
+
+        df.at[idx, "XLSNOT1"] = "/".join(parts_not1)
+
+        # ---------- XLSNOT2 ----------
+        parts_not2 = []
+
+        val = row.get("L.1")
+        if pd.notna(val) and str(val).strip() not in ("", ".", "0", "0.0"):
+            parts_not2.append(f"L1={val}")
+
+        val = row.get("L.2")
+        if pd.notna(val) and str(val).strip() not in ("", ".", "0", "0.0"):
+            parts_not2.append(f"L2={val}")
+
+        val = row.get("L.3")
+        if pd.notna(val) and str(val).strip() not in ("", ".", "0", "0.0"):
+            parts_not2.append(f"L3={val}")
+
+        df.at[idx, "XLSNOT2"] = "/".join(parts_not2)
+
+        # ---------- XLSALTZ ----------
+        altz_val = ""
+
+        val = row.get("A.N.")
+        num = pd.to_numeric(val, errors="coerce")
+        if pd.notna(num) and num != 0:
+            altz_val = num
+        else:
+            val = row.get("HGT")
+            num = pd.to_numeric(val, errors="coerce")
+            if pd.notna(num) and num != 0:
+                altz_val = num
+
+        df.at[idx, "XLSALTZ"] = altz_val
+
+        # ---------- XLSLRGH ----------
+        val = row.get("L.TOT.")
+        num = pd.to_numeric(val, errors="coerce")
+        if pd.notna(num):
+            df.at[idx, "XLSLRGH"] = num
+        else:
+            df.at[idx, "XLSLRGH"] = ""
+
+    return df
