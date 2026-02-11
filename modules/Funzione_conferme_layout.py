@@ -23,7 +23,7 @@ def tab_conferme(prod_df: pd.DataFrame):
 
     _init_state("prod_df_edit", prod_df.copy())
 
-    # garantisce colonne minime
+    # garantisce colonne minime (FAMIGLIA e ARTICOLO vengono create se mancano)
     for col in ["FAMIGLIA", "ARTICOLO"]:
         if col not in st.session_state["prod_df_edit"].columns:
             st.session_state["prod_df_edit"][col] = ""
@@ -41,13 +41,22 @@ def tab_conferme(prod_df: pd.DataFrame):
 
     with col1:
         st.subheader("Filtri database produzione")
+        
+        # Nuovi filtri nell'ordine richiesto
+        famiglia_filter = st.text_input("Filtra per FAMIGLIA (regex fullmatch):", value="", key="filtro_famiglia")
         gruppo_filter = st.text_input("Filtra per GRUPPO (regex fullmatch):", value="", key="filtro_gruppo")
+        articolo_filter = st.text_input("Filtra per ARTICOLO (regex fullmatch):", value="", key="filtro_articolo")
         tipcom_filter = st.text_input("Filtra per TIP.COM (regex fullmatch):", value="", key="filtro_tipcom")
 
         def filtra_df(df: pd.DataFrame) -> pd.DataFrame:
             out = df
+            # Applicazione sequenziale dei filtri
+            if famiglia_filter:
+                out = out[out["FAMIGLIA"].astype(str).str.fullmatch(famiglia_filter, case=False, na=False)]
             if gruppo_filter:
                 out = out[out["GRUPPO"].astype(str).str.fullmatch(gruppo_filter, case=False, na=False)]
+            if articolo_filter:
+                out = out[out["ARTICOLO"].astype(str).str.fullmatch(articolo_filter, case=False, na=False)]
             if tipcom_filter:
                 out = out[out["TIP.COM"].astype(str).str.fullmatch(tipcom_filter, case=False, na=False)]
             return out
@@ -109,9 +118,9 @@ def tab_conferme(prod_df: pd.DataFrame):
     with col3:
         st.subheader("Database produzione")
         edited_df = st.data_editor(
-        filtered_df,
-        use_container_width=True,
-        height=500,
+            filtered_df,
+            use_container_width=True,
+            height=500,
         )
     with col1:
         col_p1, col_p2, col_p3 = st.columns(3)
@@ -129,8 +138,6 @@ def tab_conferme(prod_df: pd.DataFrame):
                     st.session_state["prod_df_edit"] = df_edit
                     st.success(f"Aggiornate {len(filtered_df)} righe.")
                     st.rerun()
-
-
 
         # scrive le modifiche nel db completo
         df_edit.loc[edited_df.index, edited_df.columns] = edited_df
