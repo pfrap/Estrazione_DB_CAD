@@ -30,7 +30,7 @@ def tab_conferme(prod_df: pd.DataFrame):
 
     ordine_colonne = [
         "FAMIGLIA","GRUPPO","ARTICOLO","TIP.COM","HND","A.N.","HGT","L.TOT.","L.1","L.2","L.3","N01","TIPO","FINITURA",
-        "POSIZIONE VETRO ","N.PROSPETTO","OFX","FLR","N.CARTIGLIO","Q.TA","MQ","ML"
+        "POSIZIONE VETRO ","N.PROS","OFX","FLR","N.CART","Q.TA","MQ","ML"
     ]
     df_edit = st.session_state["prod_df_edit"].reindex(columns=ordine_colonne).copy()
 
