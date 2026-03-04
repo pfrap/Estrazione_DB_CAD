@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls -la \"/c/Users/pfrapoli/OneDrive - MOLTENI&C/Documenti/GitHub/Estrazione_DB_CAD/.vscode\")"
+    ]
+  }
+}
