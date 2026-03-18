@@ -9,15 +9,18 @@ def grafico_ofx_multipli(df):
     if df.empty:
         st.warning("❗Nessun dato con GRUPPO in ['P', 'VP', 'HAP'].")
         return
-    
+
+    df = df.copy()
+    df['OFX'] = df['OFX'].astype(str)
+
     # Selezione singola FLR
-    flr_disponibili = sorted(df['FLR'].dropna().unique())
+    flr_disponibili = sorted(df['FLR'].dropna().unique(), key=str)
     selezione_flr = st.selectbox("Seleziona un FLR", flr_disponibili)
 
     df = df[df['FLR'] == selezione_flr]
 
     # Selezione multipla OFX (filtrati sui FLR scelti)
-    ofx_disponibili = sorted(df['OFX'].dropna().unique())
+    ofx_disponibili = sorted(df['OFX'].dropna().unique(), key=str)
     selezione_ofx = st.multiselect("Seleziona OFX", ofx_disponibili, default=ofx_disponibili)
 
     if not selezione_ofx:
@@ -44,19 +47,26 @@ def grafico_ofx_multipli(df):
         .reset_index())
 
     # Filtro su elementi porta
-    gruppi_target = ['P', 'VP', 'HAP']
-    df_filtrato_porte = df_filtrato[df_filtrato['GRUPPO'].isin(gruppi_target)]
+    gruppi_target = ['P', 'VP', 'HAP', "HIP"]
+    gruppi_target_hnd = ['P', 'VP', 'HAP', 'HIP']
+    gruppi_target_an = ['P', 'VP']
+    
     # Raggruppamento dataframe per controllo su porte per ufficio
+    #df_filtrato_porte = df_filtrato[df_filtrato['GRUPPO'].isin(gruppi_target)]
     grouped_porte = (
-        df_filtrato_porte
-        .groupby(['OFX',"FAMIGLIA", "GRUPPO","ARTICOLO","TIP.COM","A.N.","HND"])["Q.TA"].sum()
+        df_filtrato[df_filtrato['GRUPPO'].isin(gruppi_target)]
+        .groupby(['OFX',"FAMIGLIA", "GRUPPO","ARTICOLO","TIP.COM","A.N.","HND", "N01"])["Q.TA"].sum()
         .reset_index())
-    grouped_HND = ( 
-            df_filtrato_porte
-            .groupby(['OFX',"FAMIGLIA", "GRUPPO","ARTICOLO","TIP.COM","HND"])["Q.TA"].sum()
-            .reset_index())
-    grouped_AN_porte = (df_filtrato_porte.groupby(["OFX","FAMIGLIA", "GRUPPO","ARTICOLO","TIP.COM","A.N."])["Q.TA"].sum()
-                  .reset_index())
+
+    grouped_HND = (
+        df_filtrato[df_filtrato['GRUPPO'].isin(gruppi_target_hnd)]
+        .groupby(['OFX',"FAMIGLIA", "GRUPPO","ARTICOLO","TIP.COM","HND"])["Q.TA"].sum()
+        .reset_index())
+    
+    grouped_AN_porte = (
+        df_filtrato[df_filtrato['GRUPPO'].isin(gruppi_target_an)]
+        .groupby(["OFX","FAMIGLIA", "GRUPPO","ARTICOLO","TIP.COM","A.N."])["Q.TA"].sum()
+        .reset_index())
 
     ############## INIZIO SCRITTURA DEL LAYOUT EFFETTIVO ##############
 
@@ -121,7 +131,7 @@ def grafico_ofx_multipli(df):
         # Grafico per confronto AN
         #st.subheader("Verifica Asse N porte")
         fig = px.bar(
-        grouped_AN_porte[~grouped_AN_porte["GRUPPO"].str.contains("HAP")],
+        grouped_AN_porte,
         x='OFX',
         y='Q.TA',
         #facet_col="OFX",
@@ -132,7 +142,7 @@ def grafico_ofx_multipli(df):
         hover_data={"GRUPPO":True,"TIP.COM":True,"A.N.":True,"Q.TA":False}
         )
         fig.update_traces()
-        fig.update_layout(height=Altezza_grafici)
+        fig.update_layout(height=Altezza_grafici, xaxis_type="category")
         st.plotly_chart(fig, use_container_width=True)
 
     with col4:
@@ -151,7 +161,7 @@ def grafico_ofx_multipli(df):
     hover_data={"GRUPPO":True,"TIP.COM":True,"Q.TA":False}
     )
     fig.update_traces()
-    fig.update_layout(height=Altezza_grafici)
+    fig.update_layout(height=Altezza_grafici, xaxis_type="category")
 
     if isinstance(selezione_ofx, (list, tuple, np.ndarray)):
         key_plot = f"grafico_hnd_{selezione_flr}_{'_'.join(map(str, selezione_ofx))}"

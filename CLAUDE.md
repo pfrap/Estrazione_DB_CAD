@@ -98,7 +98,7 @@ FLR, N.CART, Q.TA, MQ, ML
 - Misure arrotondate al più vicino 0.5mm
 - Valori 0 sostituiti con `"."` come placeholder
 
-**Gruppi componenti riconosciuti:** VETRI, PANNELLI, HA, HB, TR, P, VP, HAP (e varianti)
+**Gruppi componenti riconosciuti:** VETRI, PANNELLI, HA, HB, TR, P, VP, HAP, HIP (e varianti)
 
 ### File dati master (`data/`)
 

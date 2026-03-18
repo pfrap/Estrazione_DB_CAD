@@ -119,7 +119,7 @@ File Excel precedentemente processato dall'app stessa (formato `Estrazione_DB_CA
 | Colonna | Significato |
 |---|---|
 | `FAMIGLIA` | Famiglia prodotto |
-| `GRUPPO` | Gruppo componente (VETRI, PANNELLI, HA, HB, TR, P, VP, HAP…) |
+| `GRUPPO` | Gruppo componente (VETRI, PANNELLI, HA, HB, TR, P, VP, HAP, HIP…) |
 | `ARTICOLO` | Codice articolo neutro |
 | `TIP.COM` | Tipo componente |
 | `HND` | Tipo maniglia porte |

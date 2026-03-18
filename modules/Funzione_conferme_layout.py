@@ -28,6 +28,18 @@ def tab_conferme(prod_df: pd.DataFrame):
         if col not in st.session_state["prod_df_edit"].columns:
             st.session_state["prod_df_edit"][col] = ""
 
+    # Ordinamento righe database produzione
+    _SORT_COLS = [
+        "FLR", "FAMIGLIA", "GRUPPO", "TIP.COM", "ARTICOLO",
+        "N01", "HND", "A.N.", "L.TOT.", "TIPO", "FINITURA", "OFX"
+    ]
+    _cols_sort = [c for c in _SORT_COLS if c in st.session_state["prod_df_edit"].columns]
+    st.session_state["prod_df_edit"] = (
+        st.session_state["prod_df_edit"]
+        .sort_values(by=_cols_sort, na_position="last")
+        .reset_index(drop=True)
+    )
+
     ordine_colonne = [
         "FAMIGLIA","GRUPPO","ARTICOLO","TIP.COM","HND","A.N.","HGT","L.TOT.","L.1","L.2","L.3","N01","TIPO","FINITURA",
         "POSIZIONE VETRO ","N.PROS","OFX","FLR","N.CART","Q.TA","MQ","ML"
