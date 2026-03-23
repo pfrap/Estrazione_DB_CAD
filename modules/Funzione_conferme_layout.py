@@ -200,6 +200,7 @@ def tab_conferme(prod_df: pd.DataFrame):
         "XLSLRGH":"XLSLRGH",
         "FINITURA":"XLSOP01",
         "POSIZIONE VETRO ":"XLSNOT3",
+        "N01":"XLSNOT4",
         "Q.TA":"XLSQTOR",
         "XLSNOT1":"XLSNOT1",
         "XLSNOT2":"XLSNOT2",
