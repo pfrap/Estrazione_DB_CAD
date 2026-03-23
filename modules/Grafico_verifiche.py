@@ -127,22 +127,24 @@ def grafico_ofx_multipli(df):
     col3, col4=st.columns(2)
 
     with col3:
-    
         # Grafico per confronto AN
         #st.subheader("Verifica Asse N porte")
+        grouped_AN_porte["A.N."] = grouped_AN_porte["A.N."].astype(str)
         fig = px.bar(
         grouped_AN_porte,
         x='OFX',
         y='Q.TA',
-        #facet_col="OFX",
         color="A.N.",
-        barmode='group',
+        #barmode='group',
         text='A.N.',
         hover_name=None,
         hover_data={"GRUPPO":True,"TIP.COM":True,"A.N.":True,"Q.TA":False}
         )
         fig.update_traces()
         fig.update_layout(height=Altezza_grafici, xaxis_type="category")
+        fig.update_xaxes(
+            tickangle=90,  # prova -90 invece di 90
+            automargin=True)
         st.plotly_chart(fig, use_container_width=True)
 
     with col4:
@@ -155,13 +157,16 @@ def grafico_ofx_multipli(df):
     y='Q.TA',
     #facet_col="OFX",
     color="HND",
-    barmode='group',
+    #barmode='group',
     text='HND',
     hover_name=None,
     hover_data={"GRUPPO":True,"TIP.COM":True,"Q.TA":False}
     )
     fig.update_traces()
     fig.update_layout(height=Altezza_grafici, xaxis_type="category")
+    fig.update_xaxes(
+        tickangle=90,  # prova -90 invece di 90
+        automargin=True)
 
     if isinstance(selezione_ofx, (list, tuple, np.ndarray)):
         key_plot = f"grafico_hnd_{selezione_flr}_{'_'.join(map(str, selezione_ofx))}"
@@ -169,5 +174,4 @@ def grafico_ofx_multipli(df):
         key_plot = f"grafico_hnd_{selezione_flr}_{str(selezione_ofx)}"
     else:
         key_plot = f"grafico_hnd_{selezione_flr}_none"
-
     st.plotly_chart(fig, use_container_width=True, key=key_plot)
