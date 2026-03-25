@@ -204,6 +204,7 @@ def tab_conferme(prod_df: pd.DataFrame):
         "Q.TA":"XLSQTOR",
         "XLSNOT1":"XLSNOT1",
         "XLSNOT2":"XLSNOT2",
+        "TIP.COM":"XLSTXDS1"
     }
 
     mapping_fisso = {
