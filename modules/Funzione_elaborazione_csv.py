@@ -89,31 +89,21 @@ def _finalizza(df: pd.DataFrame, sort_cols) -> pd.DataFrame:
     df = df.copy()
     df = df.loc[:, COLONNE_BASE]
 
-    # Colonne numeriche che possono contenere 0 da sostituire con '.'
-    _COLS_ZERO_TO_DOT = ["L.TOT.", "HGT", "A.N."]
-
     # Ordinamento stabile
     df = df.sort_values(by=sort_cols, kind="mergesort")
 
     # Normalizza GRUPPO
     df["GRUPPO"] = df["GRUPPO"].astype(str).str.strip()
 
-    # FIX pandas 2.x: converti a object le colonne numeriche che riceveranno "."
-    # prima di fillna, altrimenti le colonne senza NaN rimangono float64
-    # e il successivo assegnamento di "." fallisce anche con mask vuota.
-    for col in _COLS_ZERO_TO_DOT:
-        if col in df.columns:
-            df[col] = df[col].astype(object)
-
     # Nell'app si usa spesso '.' come placeholder: lo mettiamo SOLO alla fine
     df = df.fillna(".")
 
-    # Sostituisci zeri con '.' (già in object, nessun problema di dtype)
-    for col in _COLS_ZERO_TO_DOT:
+    # Per compatibilità: quando numerici erano 0 mettevate '.'
+    for col in ["L.TOT.", "HGT", "A.N."]:
         if col in df.columns:
             df.loc[df[col].astype(str) == "0.0", col] = "."
             df.loc[df[col].astype(str) == "0", col] = "."
- 
+
     return df
 
 def funzione_dati(df: pd.DataFrame) -> pd.DataFrame:
