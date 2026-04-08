@@ -1,5 +1,6 @@
 import pandas as pd
 import streamlit as st
+import numpy as np
 
 ARTICOLI_XLSX_PATH = "data/Articoli.xlsx"
 
@@ -167,8 +168,8 @@ def prepara_colonne_as400(prod_df):
     # -------------------------------------------------
     # 2) XLSALTZ e XLSLRGH (inizializzazione)
     # -------------------------------------------------
-    df["XLSALTZ"] = ""
-    df["XLSLRGH"] = ""
+    df["XLSALTZ"] = np.nan  # colonna numerica, float64
+    df["XLSLRGH"] = np.nan  # colonna numerica, float64
 
     # -------------------------------------------------
     # Loop riga per riga (CHIARO E LEGGIBILE)
@@ -214,7 +215,7 @@ def prepara_colonne_as400(prod_df):
         df.at[idx, "XLSNOT2"] = "/".join(parts_not2)
 
         # ---------- XLSALTZ ----------
-        altz_val = ""
+        altz_val = np.nan
 
         val = row.get("A.N.")
         num = pd.to_numeric(val, errors="coerce")
@@ -233,7 +234,5 @@ def prepara_colonne_as400(prod_df):
         num = pd.to_numeric(val, errors="coerce")
         if pd.notna(num):
             df.at[idx, "XLSLRGH"] = num
-        else:
-            df.at[idx, "XLSLRGH"] = ""
 
     return df
