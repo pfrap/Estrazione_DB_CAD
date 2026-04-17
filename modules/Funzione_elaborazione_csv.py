@@ -101,6 +101,7 @@ def _finalizza(df: pd.DataFrame, sort_cols) -> pd.DataFrame:
     # Per compatibilità: quando numerici erano 0 mettevate '.'
     for col in ["L.TOT.", "HGT", "A.N."]:
         if col in df.columns:
+            df[col] = df[col].astype(object)  # ← forza object PRIMA di assegnare stringhe
             df.loc[df[col].astype(str) == "0.0", col] = "."
             df.loc[df[col].astype(str) == "0", col] = "."
 
