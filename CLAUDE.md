@@ -32,6 +32,7 @@ App.py  (orchestratore)
 | `editor_as400` | Stato editor AS400 |
 | `filtro_gruppo` | Filtro attivo per GRUPPO |
 | `filtro_tipcom` | Filtro attivo per TIP.COM |
+| `as400_source_df` | DataFrame origine post `prepara_colonne_as400` + `raggruppa_articoli` (usato dalla verifica di coerenza AS400) |
 
 Reset mirato tramite `reset_state_for_new_file()` al cambio file (non usare `st.session_state.clear()`).
 
@@ -64,18 +65,20 @@ Grafici per Tab 3:
 
 ### `modules/Funzione_conferme_layout.py`
 UI completa Tab 4 "Codifica articoli":
-- `tab_conferme(prod_df, articoli_df, as400_template)` — entry point del tab
+- `tab_conferme(prod_df)` — entry point del tab
 - Selectbox gerarchici (5 livelli: MACRO_SISTEMA → SISTEMA → C1 → C2 → ARTICOLO)
 - Anteprima immagine componente
 - Applica a riga singola o in blocco
 - Editor dati con filtri GRUPPO/TIP.COM
-- Generazione e verifica AS400
+- Bottone "🔄 Aggiorna AS400 da Database Produzione" (mapping + regole di business, vedi sotto) e verifica coerenza
 
 ### `modules/Funzione_conferme_moduli.py`
 Logica business:
 - Costruzione dizionari filtrati per selectbox gerarchici
-- `prepara_colonne_as400(prod_df, template)` — mapping campi verso AS400
-- Funzioni di verifica accuratezza importazione AS400
+- `prepara_colonne_as400(prod_df)` — calcola XLSNOT1/2, XLSALTZ, XLSLRGH e le varianti condizionali XLSVR01/02/03, XLSOP03 in base a pattern sul codice ARTICOLO
+- `raggruppa_articoli(df)` — raggruppa e somma le righe per vetri `RJL*MQ` e profili `5GJL*` (chiave: FLR + ARTICOLO + ...)
+- `carica_listino_prezzi(path)` / `calcola_prezzi_as400(df, start_row, listino_df)` — recupero prezzo unitario (`XLSPRZO`) da `data/Listino per conferme.xlsx`
+- `importa_as400(...)` / `verifica_as400(...)` — trasferimento mapping 1:1 verso il template e verifica coerenza importazione AS400
 
 ### `modules/Rainbow_text.py`
 - Utility per rendering testo con gradiente arcobaleno in Streamlit (uso estetico)
@@ -108,11 +111,16 @@ FLR, N.CART, Q.TA, MQ, ML
 - `ID_COMPONENTE_ARTICOLO_PADRE_DESCRIZIONE` — descrizione
 - `IMMAGINE_NOME_FILE` — path relativo immagine in `images/`
 
-**`Tracciato_import_as400.xlsx`** — template vuoto con le colonne AS400 richieste.
+**`Tracciato_import_as400.xlsx`** — template vuoto con le colonne AS400 richieste (47 colonne).
 
-### Mapping AS400 (in `Funzione_conferme_moduli.py`)
+**`Listino per conferme.xlsx`** — listino prezzi per il calcolo di `XLSPRZO`:
+- `CONCAT_3` — codice articolo/chiave di match (univoco)
+- `UNIT` — unità di misura (`ML`, `MQ`, `N.`)
+- ultima colonna — prezzo unitario (`€_UNIT`, rinominato internamente `PREZZO_UNITARIO` per evitare problemi di encoding)
 
-Mapping 1:1 senza concatenazioni:
+### Mapping AS400 (in `Funzione_conferme_layout.py`)
+
+Mapping 1:1 (`mapping_singolo`), incluse le colonne calcolate in `prepara_colonne_as400`:
 ```python
 {
     "ARTICOLO": "XLSCDAR",
@@ -120,23 +128,46 @@ Mapping 1:1 senza concatenazioni:
     "XLSALTZ": "XLSALTZ",
     "XLSLRGH": "XLSLRGH",
     "FINITURA": "XLSOP01",
-    "POSIZIONE VETRO": "XLSNOT3",
+    "POSIZIONE VETRO ": "XLSNOT3",
+    "N01": "XLSNOT4",
     "Q.TA": "XLSQTOR",
     "XLSNOT1": "XLSNOT1",
     "XLSNOT2": "XLSNOT2",
+    "TIP.COM": "XLSTXDS1",
+    "XLSVR01": "XLSVR01",
+    "XLSVR02": "XLSVR02",
+    "XLSVR03": "XLSVR03",
+    "XLSOP03": "XLSOP03",
 }
 ```
 
-Valori fissi:
+Valori fissi (`mapping_fisso`):
 ```python
 {
     "XLSCBXB1": "012",
     "XLSCBXB2": "P25",
-    "XLSVR01": "5FP",
-    "XLSVR02": "5HN",
-    "XLSVR03": "5LB",
 }
 ```
+
+### Regole di business AS400 (dettagliate in `Regole conferme.txt`)
+
+Applicate in sequenza dal bottone "🔄 Aggiorna AS400 da Database Produzione" (`Funzione_conferme_layout.py`), prima del mapping verso il template:
+
+1. **Varianti condizionali** (`prepara_colonne_as400`) — in base a pattern sul codice `ARTICOLO` (`*` = jolly a carattere singolo, es. `5*0P` = `5`+1 char+`0P`):
+   - `RJL*` → `XLSVR01 = "5FV"` (default altrimenti `"5FP"`)
+   - `5*0P`, `5**V`, `5**HAP`, `5**VP` → `XLSVR02 = "5HN"`
+   - `5*0P` → `XLSVR03 = "5FV"`; `5**HA`, `5**HB`, `5**TR` → `XLSVR03 = "5LB"` e `XLSOP03 = "L3100"`
+
+2. **Raggruppamento e somma** (`raggruppa_articoli`) — le righe non incluse nei due gruppi restano invariate (1:1):
+   - Vetri `RJL*MQ`: MQ per riga = `(XLSLRGH × XLSALTZ) / 1_000_000`, righe raggruppate per `FLR + ARTICOLO + XLSVR01 + FINITURA` sommando in `Q.TA`
+   - Profili `5GJL*`: righe raggruppate per `FLR + ARTICOLO + XLSALTZ` sommando `Q.TA`
+   - Le dimensioni non incluse nella chiave (`XLSALTZ`/`XLSLRGH`) vengono svuotate nella riga risultante
+
+3. **Prezzo unitario** (`carica_listino_prezzi` + `calcola_prezzi_as400`), da `data/Listino per conferme.xlsx`:
+   - Articoli `RJL*`: match esatto su `CONCAT_3` con chiave `"{XLSCDAR} {XLSOP01}"`
+   - Altri articoli: match di prefisso più specifico (`XLSCDAR` inizia con `CONCAT_3`, si sceglie il `CONCAT_3` più lungo in caso di più match)
+   - `UNIT == "ML"` → `XLSPRZO = prezzo_listino × max(XLSLRGH/1000, 0.5)`; altrimenti (`MQ`, `N.`) → `XLSPRZO = prezzo_listino`
+   - Articoli senza corrispondenza: `XLSPRZO` resta vuoto, elenco mostrato in un `st.warning` in-app
 
 ---
 
@@ -178,7 +209,8 @@ Valori fissi:
 2. Caricare un CSV AutoCAD in Tab 1 → verificare che `prod_df` contenga le 25 colonne
 3. Navigare in Tab 3 → verificare grafici ML e porte
 4. In Tab 4 → selezionare un articolo dal dizionario, verificare anteprima immagine
-5. Esportare `AS400_elaborato.xlsx` → verificare colonne e valori fissi
+5. Cliccare "🔄 Aggiorna AS400 da Database Produzione" → verificare varianti (XLSVR01/02/03, XLSOP03), raggruppamenti (righe `RJL*MQ` e `5GJL*` sommate per FLR+ARTICOLO+...) e prezzo (`XLSPRZO`) coerenti con `Regole conferme.txt`, ed eventuale avviso articoli senza prezzo
+6. Esportare `AS400_elaborato.xlsx` → verificare colonne e valori fissi
 
 ---
 

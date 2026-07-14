@@ -13,7 +13,7 @@ Sviluppata per uso interno MOLTENI&C.
 | **Riassunto progetto** | Caricamento file, grafici treemap/sunburst, riepilogo componenti per piano e famiglia |
 | **Comparazione DB** | Confronto affiancato tra dati grezzi e database elaborato |
 | **Verifiche macro** | Controllo metri lineari (ML), numero assi porte (A.N.), maniglie (HND), uffici (OFX) |
-| **Codifica articoli** | Associazione articoli dal dizionario gerarchico, anteprima immagini, export AS400 |
+| **Codifica articoli** | Associazione articoli dal dizionario gerarchico, anteprima immagini, raggruppamenti/prezzi e export AS400 |
 
 ---
 
@@ -92,7 +92,8 @@ Estrazione_DB_CAD/
 ├── requirements.txt                    # Dipendenze Python
 ├── data/
 │   ├── Articoli.xlsx                  # Dizionario gerarchico articoli (dati master)
-│   └── Tracciato_import_as400.xlsx    # Template colonne AS400
+│   ├── Tracciato_import_as400.xlsx    # Template colonne AS400
+│   └── Listino per conferme.xlsx      # Listino prezzi per calcolo XLSPRZO
 ├── images/                            # Anteprime componenti (540+ PNG)
 └── modules/
     ├── Funzioni_caricamento_file.py   # Caricamento CSV/XLSX
@@ -163,6 +164,14 @@ La scheda "Codifica articoli" genera un file di importazione AS400 con mapping d
 | `HND` | `XLSOP02` |
 | `FINITURA` | `XLSOP01` |
 | `POSIZIONE VETRO` | `XLSNOT3` |
+| `N01` | `XLSNOT4` |
 | `Q.TA` | `XLSQTOR` |
+| `TIP.COM` | `XLSTXDS1` |
 
-Valori fissi aggiunti automaticamente: `XLSCBXB1=012`, `XLSCBXB2=P25`, `XLSVR01=5FP`, `XLSVR02=5HN`, `XLSVR03=5LB`.
+Valori fissi aggiunti automaticamente: `XLSCBXB1=012`, `XLSCBXB2=P25`.
+
+Oltre al mapping diretto, al click su **"🔄 Aggiorna AS400 da Database Produzione"** vengono applicate ulteriori regole di business (dettagliate in `Regole conferme.txt`):
+
+- **Varianti condizionali** (`XLSVR01/02/03`, `XLSOP03`) calcolate in base al codice articolo — es. articoli `RJL*` → `XLSVR01=5FV`, articoli `5**HA`/`5**HB`/`5**TR` → `XLSVR03=5LB` e `XLSOP03=L3100`
+- **Raggruppamento e somma quantità** per vetri `RJL*MQ` (somma dell'area in mq) e profili `5GJL*` (somma quantità), raggruppati per piano (`FLR`) + articolo + altre chiavi
+- **Prezzo unitario** (`XLSPRZO`) recuperato da `data/Listino per conferme.xlsx` in base al codice articolo, con avviso in-app per gli articoli senza prezzo trovato

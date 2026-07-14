@@ -204,36 +204,52 @@ def tab_conferme(prod_df: pd.DataFrame):
         "Q.TA":"XLSQTOR",
         "XLSNOT1":"XLSNOT1",
         "XLSNOT2":"XLSNOT2",
-        "TIP.COM":"XLSTXDS1"
+        "TIP.COM":"XLSTXDS1",
+        "XLSVR01":"XLSVR01",
+        "XLSVR02":"XLSVR02",
+        "XLSVR03":"XLSVR03",
+        "XLSOP03":"XLSOP03",
     }
 
     mapping_fisso = {
         "XLSCBXB1": "012",
         "XLSCBXB2": "P25",
-        "XLSVR01": "5FP",
-        "XLSVR02": "5HN",
-        "XLSVR03": "5LB",
     }
 
     colb1a, colb1b, _ = st.columns([0.25, 0.25, 0.5], gap="small")
 
     with colb1a:
         if st.button("🔄 Aggiorna AS400 da Database Produzione"):
-            df_origine=prepara_colonne_as400(st.session_state["prod_df_edit"])
+            df_origine = prepara_colonne_as400(st.session_state["prod_df_edit"])
+            df_origine = raggruppa_articoli(df_origine)
 
-            st.session_state["import_as400"] = importa_as400(
+            import_as400 = importa_as400(
                 df_origine,
                 df_template=st.session_state["import_as400_template"],
                 mapping_orig_to_dest=mapping_singolo,
                 start_row=2,
                 mapping_fisso=mapping_fisso,
             )
+
+            listino_df = carica_listino_prezzi()
+            import_as400, articoli_senza_prezzo = calcola_prezzi_as400(
+                import_as400, start_row=2, listino_df=listino_df
+            )
+
+            st.session_state["import_as400"] = import_as400
+            st.session_state["as400_source_df"] = df_origine
+
+            if articoli_senza_prezzo:
+                st.warning(
+                    f"⚠️ Nessun prezzo trovato per {len(articoli_senza_prezzo)} articoli: "
+                    + ", ".join(articoli_senza_prezzo)
+                )
             st.success("Dati import AS400 aggiornati.")
             st.rerun()
 
-    # Verifica coerenza (solo colonne mappate)
+    # Verifica coerenza (solo colonne mappate, sulla sorgente post-raggruppamento)
     errori = verifica_as400(
-        df_origine=st.session_state["prod_df_edit"],
+        df_origine=st.session_state.get("as400_source_df", st.session_state["prod_df_edit"]),
         df_destinazione=st.session_state["import_as400"],
         mapping_orig_to_dest=mapping_singolo,
         start_row=2,
