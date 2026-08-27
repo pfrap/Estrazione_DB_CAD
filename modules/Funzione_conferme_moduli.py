@@ -182,7 +182,7 @@ def prepara_colonne_as400(prod_df):
         # ---------- XLSNOT1 ----------
         parts_not1 = []
 
-        val = row.get("N.PROS")
+        val = row.get("N.PROSPETTO")
         if pd.notna(val) and str(val).strip() not in ("", ".", "0", "0.0"):
             parts_not1.append(f"EL: {val}")
 
@@ -194,7 +194,7 @@ def prepara_colonne_as400(prod_df):
         if pd.notna(val) and str(val).strip() not in ("", ".", "0", "0.0"):
             parts_not1.append(f"FLR: {val}")
 
-        val = row.get("N.CART")
+        val = row.get("N.CARTIGLIO")
         if pd.notna(val) and str(val).strip() not in ("", ".", "0", "0.0"):
             parts_not1.append(f"DRW: {val}")
 
