@@ -17,11 +17,21 @@ def _normalizza_colonne(df: pd.DataFrame) -> pd.DataFrame:
     # Filtra solo elementi utili
     if "Name" in df.columns:
         mask = df["Name"].astype(str).str.contains("VETRI|PANNELLI|Profili", case=False, na=False)
+
+        # Nuovo tracciato: i pannelli hanno Name generico ("ETICHETTA MURO CIECO")
+        # ma portano il gruppo nella colonna GRUPPO grezza -> teniamo comunque quelle righe
+        if "GRUPPO" in df.columns:
+            mask = mask | df["GRUPPO"].astype(str).str.contains("PANNELL", case=False, na=False)
+
         df = df[mask].copy()
 
         # Gruppo base
         df.loc[df["Name"].astype(str).str.contains("VETRI", case=False, na=False), "GRUPPO"] = "VETRI"
         df.loc[df["Name"].astype(str).str.contains("PANNELLI", case=False, na=False), "GRUPPO"] = "PANNELLI"
+
+        # Normalizza i pannelli riconosciuti dalla colonna GRUPPO grezza (es. "PANNELLO" singolare)
+        if "GRUPPO" in df.columns:
+            df.loc[df["GRUPPO"].astype(str).str.contains("PANNELL", case=False, na=False), "GRUPPO"] = "PANNELLI"
 
     # Eccezione porte (TIPO contiene 'T')
     if "TIPO" in df.columns:
