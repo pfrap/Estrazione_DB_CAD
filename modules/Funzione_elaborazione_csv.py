@@ -3,7 +3,7 @@ import pandas as pd
 # Colonne finali attese nell'app (se mancano vengono create)
 COLONNE_BASE = [
     "FAMIGLIA","GRUPPO","ARTICOLO","DESCRIZIONE","TIP.COM","HND","A.N.","HGT","L.TOT.","L.1","L.2","L.3",
-    "N01","N02","N03","TIPO","FINITURA","POSIZIONE VETRO ","N.PROS","OFX","FLR","N.CART","Q.TA","MQ","ML"
+    "N01","N02","N03","TIPO","FINITURA","POSIZIONE VETRO ","N.PROSPETTO","OFX","FLR","N.CARTIGLIO","Q.TA","MQ","ML"
 ]
 
 def _safe_round_half(series: pd.Series) -> pd.Series:
@@ -17,11 +17,21 @@ def _normalizza_colonne(df: pd.DataFrame) -> pd.DataFrame:
     # Filtra solo elementi utili
     if "Name" in df.columns:
         mask = df["Name"].astype(str).str.contains("VETRI|PANNELLI|Profili", case=False, na=False)
+
+        # Nuovo tracciato: i pannelli hanno Name generico ("ETICHETTA MURO CIECO")
+        # ma portano il gruppo nella colonna GRUPPO grezza -> teniamo comunque quelle righe
+        if "GRUPPO" in df.columns:
+            mask = mask | df["GRUPPO"].astype(str).str.contains("PANNELL", case=False, na=False)
+
         df = df[mask].copy()
 
         # Gruppo base
         df.loc[df["Name"].astype(str).str.contains("VETRI", case=False, na=False), "GRUPPO"] = "VETRI"
         df.loc[df["Name"].astype(str).str.contains("PANNELLI", case=False, na=False), "GRUPPO"] = "PANNELLI"
+
+        # Normalizza i pannelli riconosciuti dalla colonna GRUPPO grezza (es. "PANNELLO" singolare)
+        if "GRUPPO" in df.columns:
+            df.loc[df["GRUPPO"].astype(str).str.contains("PANNELL", case=False, na=False), "GRUPPO"] = "PANNELLI"
 
     # Eccezione porte (TIPO contiene 'T')
     if "TIPO" in df.columns:
@@ -42,8 +52,7 @@ def _normalizza_colonne(df: pd.DataFrame) -> pd.DataFrame:
     # NOTE-1 / NOTE-2
     df = df.rename(columns={"NOTE-1": "N02", "NOTE-2": "N03"})
 
-    # Normalizzazione nomi colonne N.PROSPETTO → N.PROS, N.CARTIGLIO → N.CART
-    df = df.rename(columns={"N.PROSPETTO": "N.PROS", "N.CARTIGLIO": "N.CART"})
+    # N.CARTIGLIO / N.PROSPETTO: si mantengono i nomi completi (nessuna abbreviazione)
 
     # Count -> Q.TA
     if "Count" in df.columns:
@@ -116,6 +125,8 @@ def funzione_dati(df: pd.DataFrame) -> pd.DataFrame:
 
 def funzione_dati_xlsx(df: pd.DataFrame) -> pd.DataFrame:
     """Elabora un DB già in Excel (già quasi pronto) e ricalcola misure."""
+    # Alias legacy: vecchi export usavano le sigle abbreviate
+    df = df.rename(columns={"N.CART": "N.CARTIGLIO", "N.PROS": "N.PROSPETTO"})
     df = _calcola_misure(df)
     df = _garantisci_colonne(df)
     return _finalizza(df, sort_cols=["FAMIGLIA","ARTICOLO","DESCRIZIONE","GRUPPO","TIP.COM","A.N.","HGT","L.TOT.","L.1"])
